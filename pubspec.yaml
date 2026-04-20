@@ -1,0 +1,26 @@
+name: ownly
+description: "Ownly — личный дневник мест"
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.5.1
+  hive_flutter: ^1.1.0
+  go_router: ^14.2.7
+  google_fonts: ^6.2.1
+  fl_chart: ^0.68.0
+  uuid: ^4.4.0
+  shared_preferences: ^2.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
