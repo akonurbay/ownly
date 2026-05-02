@@ -1,0 +1,497 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:uuid/uuid.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_text_styles.dart';
+import '../../../domain/entities/enums.dart';
+import '../../../domain/entities/place.dart';
+import '../../providers/places_provider.dart';
+
+class AddPlaceScreen extends ConsumerStatefulWidget {
+  const AddPlaceScreen({super.key});
+
+  @override
+  ConsumerState<AddPlaceScreen> createState() => _AddPlaceScreenState();
+}
+
+class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
+  int _step = 0;
+
+  // Step 1
+  final _nameCtrl = TextEditingController();
+  final _cityCtrl = TextEditingController();
+  final _noteCtrl = TextEditingController();
+  PlaceCategory _category = PlaceCategory.cafe;
+
+  // Step 2
+  MoodType _mood = MoodType.good;
+  WeatherType _weather = WeatherType.sunny;
+  CompanionType _companion = CompanionType.alone;
+  final _visitNoteCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _cityCtrl.dispose();
+    _noteCtrl.dispose();
+    _visitNoteCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (_nameCtrl.text.trim().isEmpty) return;
+
+    final placeId = const Uuid().v4();
+    final place = Place(
+      id: placeId,
+      name: _nameCtrl.text.trim(),
+      description: _noteCtrl.text.trim(),
+      category: _category,
+      city: _cityCtrl.text.trim().isEmpty ? 'Неизвестно' : _cityCtrl.text.trim(),
+      createdAt: DateTime.now(),
+      isFavorite: false,
+    );
+
+    await ref.read(placesProvider.notifier).addPlace(place);
+    await ref.read(visitsProvider.notifier).addVisit(
+          placeId: placeId,
+          mood: _mood,
+          weather: _weather,
+          companion: _companion,
+          note: _visitNoteCtrl.text.isEmpty ? null : _visitNoteCtrl.text,
+        );
+
+    if (mounted) context.go('/');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.bgPrimary,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: const Icon(Icons.close,
+                        color: AppColors.textSub, size: 22),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _step == 0 ? 'Новое место' : 'Первый визит',
+                    style: AppTextStyles.h4,
+                  ),
+                  const Spacer(),
+                  const SizedBox(width: 22),
+                ],
+              ),
+            ),
+
+            // Step indicator
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                2,
+                (i) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == _step ? 20 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: i == _step ? AppColors.accent : AppColors.border,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Expanded(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: _step == 0
+                    ? _Step1(
+                        key: const ValueKey(0),
+                        nameCtrl: _nameCtrl,
+                        cityCtrl: _cityCtrl,
+                        noteCtrl: _noteCtrl,
+                        category: _category,
+                        onCategoryChanged: (c) =>
+                            setState(() => _category = c),
+                        onNext: () => setState(() => _step = 1),
+                      )
+                    : _Step2(
+                        key: const ValueKey(1),
+                        mood: _mood,
+                        weather: _weather,
+                        companion: _companion,
+                        noteCtrl: _visitNoteCtrl,
+                        onMoodChanged: (m) => setState(() => _mood = m),
+                        onWeatherChanged: (w) => setState(() => _weather = w),
+                        onCompanionChanged: (c) =>
+                            setState(() => _companion = c),
+                        onBack: () => setState(() => _step = 0),
+                        onSave: _save,
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Step1 extends StatelessWidget {
+  final TextEditingController nameCtrl;
+  final TextEditingController cityCtrl;
+  final TextEditingController noteCtrl;
+  final PlaceCategory category;
+  final ValueChanged<PlaceCategory> onCategoryChanged;
+  final VoidCallback onNext;
+
+  const _Step1({
+    super.key,
+    required this.nameCtrl,
+    required this.cityCtrl,
+    required this.noteCtrl,
+    required this.category,
+    required this.onCategoryChanged,
+    required this.onNext,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Photo placeholder
+          Container(
+            height: 120,
+            decoration: BoxDecoration(
+              color: AppColors.bgDeep,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.border,
+                style: BorderStyle.solid,
+                width: 1.5,
+              ),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.camera_alt_outlined,
+                      color: AppColors.textMuted, size: 28),
+                  const SizedBox(height: 6),
+                  Text('Добавить фото',
+                      style: AppTextStyles.caption),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          _FieldLabel('Название места *'),
+          const SizedBox(height: 6),
+          TextField(
+            controller: nameCtrl,
+            decoration:
+                const InputDecoration(hintText: 'Например: Кофейня «Утро»'),
+          ),
+
+          const SizedBox(height: 16),
+
+          _FieldLabel('Город'),
+          const SizedBox(height: 6),
+          TextField(
+            controller: cityCtrl,
+            decoration: const InputDecoration(hintText: 'Москва'),
+          ),
+
+          const SizedBox(height: 16),
+
+          _FieldLabel('Категория'),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: PlaceCategory.values.map((cat) {
+              final active = category == cat;
+              return GestureDetector(
+                onTap: () => onCategoryChanged(cat),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: active ? AppColors.accent : AppColors.bgCard,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: active ? AppColors.accent : AppColors.border,
+                    ),
+                  ),
+                  child: Text(
+                    '${cat.emoji} ${cat.label}',
+                    style: AppTextStyles.label.copyWith(
+                      color: active ? Colors.white : AppColors.textSub,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 16),
+
+          _FieldLabel('Личная заметка'),
+          const SizedBox(height: 6),
+          TextField(
+            controller: noteCtrl,
+            maxLines: 3,
+            style: AppTextStyles.quote.copyWith(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'Что особенного в этом месте?',
+              hintStyle: AppTextStyles.quote,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          ElevatedButton(
+            onPressed: onNext,
+            child: Text('Далее: первый визит →',
+                style: AppTextStyles.button),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Step2 extends StatelessWidget {
+  final MoodType mood;
+  final WeatherType weather;
+  final CompanionType companion;
+  final TextEditingController noteCtrl;
+  final ValueChanged<MoodType> onMoodChanged;
+  final ValueChanged<WeatherType> onWeatherChanged;
+  final ValueChanged<CompanionType> onCompanionChanged;
+  final VoidCallback onBack;
+  final VoidCallback onSave;
+
+  const _Step2({
+    super.key,
+    required this.mood,
+    required this.weather,
+    required this.companion,
+    required this.noteCtrl,
+    required this.onMoodChanged,
+    required this.onWeatherChanged,
+    required this.onCompanionChanged,
+    required this.onBack,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Text(
+              'Как прошёл этот визит?',
+              style: AppTextStyles.quote
+                  .copyWith(fontSize: 15, color: AppColors.textSub),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          _SectionLabel('Настроение'),
+          const SizedBox(height: 8),
+          _Grid2x2(
+            items: MoodType.values,
+            selected: mood,
+            activeColor: AppColors.accentBg,
+            activeBorder: AppColors.accent,
+            labelOf: (m) => m.label,
+            emojiOf: (m) => m.emoji,
+            onTap: onMoodChanged,
+          ),
+
+          const SizedBox(height: 20),
+
+          _SectionLabel('Погода'),
+          const SizedBox(height: 8),
+          _Grid2x2(
+            items: WeatherType.values,
+            selected: weather,
+            activeColor: AppColors.blueBg,
+            activeBorder: AppColors.blue,
+            labelOf: (w) => w.label,
+            emojiOf: (w) => w.emoji,
+            onTap: onWeatherChanged,
+          ),
+
+          const SizedBox(height: 20),
+
+          _SectionLabel('С кем'),
+          const SizedBox(height: 8),
+          _Grid2x2(
+            items: CompanionType.values,
+            selected: companion,
+            activeColor: AppColors.accentBg,
+            activeBorder: AppColors.accent,
+            labelOf: (c) => c.label,
+            emojiOf: (c) => switch (c) {
+              CompanionType.alone => '🧍',
+              CompanionType.friend => '👥',
+              CompanionType.couple => '💑',
+              CompanionType.family => '👨‍👩‍👧',
+            },
+            onTap: onCompanionChanged,
+          ),
+
+          const SizedBox(height: 20),
+
+          _SectionLabel('Заметка к визиту'),
+          const SizedBox(height: 8),
+          TextField(
+            controller: noteCtrl,
+            maxLines: 3,
+            style: AppTextStyles.quote.copyWith(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'Что запомнилось?',
+              hintStyle: AppTextStyles.quote,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onBack,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textSub,
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999)),
+                    minimumSize: const Size(0, 52),
+                  ),
+                  child: const Text('← Назад'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: onSave,
+                  child: Text('Сохранить ✓', style: AppTextStyles.button),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  final String text;
+  const _FieldLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: AppTextStyles.micro.copyWith(color: AppColors.textSub),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(text, style: AppTextStyles.h4.copyWith(fontSize: 15));
+  }
+}
+
+class _Grid2x2<T> extends StatelessWidget {
+  final List<T> items;
+  final T selected;
+  final Color activeColor;
+  final Color activeBorder;
+  final String Function(T) labelOf;
+  final String Function(T) emojiOf;
+  final ValueChanged<T> onTap;
+
+  const _Grid2x2({
+    required this.items,
+    required this.selected,
+    required this.activeColor,
+    required this.activeBorder,
+    required this.labelOf,
+    required this.emojiOf,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      crossAxisCount: 2,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 2.5,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: items.map((item) {
+        final active = item == selected;
+        return GestureDetector(
+          onTap: () => onTap(item),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              color: active ? activeColor : AppColors.bgCard,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: active ? activeBorder : AppColors.border,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(emojiOf(item), style: const TextStyle(fontSize: 20)),
+                const SizedBox(width: 8),
+                Text(
+                  labelOf(item),
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
