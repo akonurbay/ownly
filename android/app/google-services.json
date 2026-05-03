@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "669253863605",
+    "project_id": "ownly-8955c",
+    "storage_bucket": "ownly-8955c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:669253863605:android:2667ca842ea0fe8a9cd6fc",
+        "android_client_info": {
+          "package_name": "com.example.ownly"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAaj8PKMGUBrOM9tpjlxXW2LmGrRVWj9xQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
