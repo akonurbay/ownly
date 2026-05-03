@@ -75,16 +75,19 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   String _firebaseError(String code) {
-    return switch (code) {
-      'user-not-found'        => 'Пользователь не найден',
-      'wrong-password'        => 'Неверный пароль',
-      'invalid-credential'    => 'Неверный email или пароль',
-      'email-already-in-use'  => 'Email уже зарегистрирован',
-      'weak-password'         => 'Пароль слишком простой',
-      'invalid-email'         => 'Некорректный email',
-      'network-request-failed'=> 'Нет соединения с сетью',
-      'too-many-requests'     => 'Слишком много попыток. Попробуйте позже',
-      _                       => 'Ошибка: $code',
+    return switch (code.toLowerCase()) {
+      'user-not-found'               => 'Пользователь не найден',
+      'wrong-password'               => 'Неверный пароль',
+      'invalid-credential'           => 'Неверный email или пароль',
+      'invalid_login_credentials'    => 'Неверный email или пароль',
+      'email-already-in-use'         => 'Email уже зарегистрирован',
+      'weak-password'                => 'Пароль слишком простой',
+      'invalid-email'                => 'Некорректный email',
+      'user-disabled'                => 'Аккаунт заблокирован',
+      'network-request-failed'       => 'Нет соединения с сетью',
+      'too-many-requests'            => 'Слишком много попыток. Попробуйте позже',
+      'channel-error'                => 'Нет соединения с сетью',
+      _                              => 'Ошибка входа. Попробуйте снова',
     };
   }
 
