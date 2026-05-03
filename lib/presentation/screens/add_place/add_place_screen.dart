@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -17,12 +19,14 @@ class AddPlaceScreen extends ConsumerStatefulWidget {
 
 class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   int _step = 0;
+  bool _saving = false;
 
   // Step 1
   final _nameCtrl = TextEditingController();
   final _cityCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
   PlaceCategory _category = PlaceCategory.cafe;
+  String? _photoPath;
 
   // Step 2
   MoodType _mood = MoodType.good;
@@ -39,30 +43,131 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
     super.dispose();
   }
 
-  Future<void> _save() async {
-    if (_nameCtrl.text.trim().isEmpty) return;
-
-    final placeId = const Uuid().v4();
-    final place = Place(
-      id: placeId,
-      name: _nameCtrl.text.trim(),
-      description: _noteCtrl.text.trim(),
-      category: _category,
-      city: _cityCtrl.text.trim().isEmpty ? 'Неизвестно' : _cityCtrl.text.trim(),
-      createdAt: DateTime.now(),
-      isFavorite: false,
+  Future<void> _pickPhoto(ImageSource source) async {
+    final picker = ImagePicker();
+    final image = await picker.pickImage(
+      source: source,
+      imageQuality: 80,
+      maxWidth: 1200,
     );
+    if (image != null) setState(() => _photoPath = image.path);
+  }
 
-    await ref.read(placesProvider.notifier).addPlace(place);
-    await ref.read(visitsProvider.notifier).addVisit(
-          placeId: placeId,
-          mood: _mood,
-          weather: _weather,
-          companion: _companion,
-          note: _visitNoteCtrl.text.isEmpty ? null : _visitNoteCtrl.text,
+  void _showPhotoOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: AppColors.bgCard,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _PhotoOption(
+                icon: Icons.camera_alt_outlined,
+                label: 'Сделать фото',
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickPhoto(ImageSource.camera);
+                },
+              ),
+              const SizedBox(height: 12),
+              _PhotoOption(
+                icon: Icons.photo_library_outlined,
+                label: 'Выбрать из галереи',
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickPhoto(ImageSource.gallery);
+                },
+              ),
+              if (_photoPath != null) ...[
+                const SizedBox(height: 12),
+                _PhotoOption(
+                  icon: Icons.delete_outline,
+                  label: 'Удалить фото',
+                  color: AppColors.dangerRed,
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() => _photoPath = null);
+                  },
+                ),
+              ],
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _goToStep2() {
+    if (_nameCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Введите название места'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    setState(() => _step = 1);
+  }
+
+  Future<void> _save() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+
+    try {
+      final placeId = const Uuid().v4();
+      final place = Place(
+        id: placeId,
+        name: _nameCtrl.text.trim(),
+        description: _noteCtrl.text.trim(),
+        category: _category,
+        city: _cityCtrl.text.trim().isEmpty
+            ? 'Неизвестно'
+            : _cityCtrl.text.trim(),
+        createdAt: DateTime.now(),
+        isFavorite: false,
+        photoPath: _photoPath,
+      );
+
+      await ref.read(placesProvider.notifier).addPlace(place);
+      await ref.read(visitsProvider.notifier).addVisit(
+            placeId: placeId,
+            mood: _mood,
+            weather: _weather,
+            companion: _companion,
+            note: _visitNoteCtrl.text.trim().isEmpty
+                ? null
+                : _visitNoteCtrl.text.trim(),
+          );
+
+      if (mounted) context.go('/');
+    } catch (e) {
+      setState(() => _saving = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ошибка сохранения. Попробуйте снова.'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
-
-    if (mounted) context.go('/');
+      }
+    }
   }
 
   @override
@@ -93,7 +198,7 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
               ),
             ),
 
-            // Step indicator
+            // Step dots
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -105,7 +210,7 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
                   width: i == _step ? 20 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: i == _step ? AppColors.accent : AppColors.border,
+                    color: i <= _step ? AppColors.accent : AppColors.border,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -124,9 +229,11 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
                         cityCtrl: _cityCtrl,
                         noteCtrl: _noteCtrl,
                         category: _category,
+                        photoPath: _photoPath,
+                        onPhotoTap: _showPhotoOptions,
                         onCategoryChanged: (c) =>
                             setState(() => _category = c),
-                        onNext: () => setState(() => _step = 1),
+                        onNext: _goToStep2,
                       )
                     : _Step2(
                         key: const ValueKey(1),
@@ -134,6 +241,7 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
                         weather: _weather,
                         companion: _companion,
                         noteCtrl: _visitNoteCtrl,
+                        saving: _saving,
                         onMoodChanged: (m) => setState(() => _mood = m),
                         onWeatherChanged: (w) => setState(() => _weather = w),
                         onCompanionChanged: (c) =>
@@ -150,11 +258,15 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   }
 }
 
+// ─── Step 1 ───────────────────────────────────────────────────────────────────
+
 class _Step1 extends StatelessWidget {
   final TextEditingController nameCtrl;
   final TextEditingController cityCtrl;
   final TextEditingController noteCtrl;
   final PlaceCategory category;
+  final String? photoPath;
+  final VoidCallback onPhotoTap;
   final ValueChanged<PlaceCategory> onCategoryChanged;
   final VoidCallback onNext;
 
@@ -164,6 +276,8 @@ class _Step1 extends StatelessWidget {
     required this.cityCtrl,
     required this.noteCtrl,
     required this.category,
+    required this.photoPath,
+    required this.onPhotoTap,
     required this.onCategoryChanged,
     required this.onNext,
   });
@@ -175,29 +289,80 @@ class _Step1 extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Photo placeholder
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: AppColors.bgDeep,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.border,
-                style: BorderStyle.solid,
-                width: 1.5,
+          // Photo area
+          GestureDetector(
+            onTap: onPhotoTap,
+            child: Container(
+              height: 160,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.bgDeep,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: photoPath != null
+                      ? AppColors.accent
+                      : AppColors.border,
+                  width: 1.5,
+                ),
               ),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.camera_alt_outlined,
-                      color: AppColors.textMuted, size: 28),
-                  const SizedBox(height: 6),
-                  Text('Добавить фото',
-                      style: AppTextStyles.caption),
-                ],
-              ),
+              clipBehavior: Clip.antiAlias,
+              child: photoPath != null
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.file(
+                          File(photoPath!),
+                          fit: BoxFit.cover,
+                        ),
+                        Positioned(
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.edit,
+                                    color: Colors.white, size: 14),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Изменить',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppColors.accentBg,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt_outlined,
+                              color: AppColors.accent, size: 24),
+                        ),
+                        const SizedBox(height: 10),
+                        Text('Добавить фото',
+                            style: AppTextStyles.label
+                                .copyWith(color: AppColors.accent)),
+                        const SizedBox(height: 4),
+                        Text('камера или галерея',
+                            style: AppTextStyles.caption),
+                      ],
+                    ),
             ),
           ),
 
@@ -207,8 +372,9 @@ class _Step1 extends StatelessWidget {
           const SizedBox(height: 6),
           TextField(
             controller: nameCtrl,
-            decoration:
-                const InputDecoration(hintText: 'Например: Кофейня «Утро»'),
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+                hintText: 'Например: Кофейня «Утро»'),
           ),
 
           const SizedBox(height: 16),
@@ -217,6 +383,7 @@ class _Step1 extends StatelessWidget {
           const SizedBox(height: 6),
           TextField(
             controller: cityCtrl,
+            textCapitalization: TextCapitalization.words,
             decoration: const InputDecoration(hintText: 'Москва'),
           ),
 
@@ -260,7 +427,9 @@ class _Step1 extends StatelessWidget {
           TextField(
             controller: noteCtrl,
             maxLines: 3,
-            style: AppTextStyles.quote.copyWith(color: AppColors.textPrimary),
+            textCapitalization: TextCapitalization.sentences,
+            style:
+                AppTextStyles.quote.copyWith(color: AppColors.textPrimary),
             decoration: InputDecoration(
               hintText: 'Что особенного в этом месте?',
               hintStyle: AppTextStyles.quote,
@@ -280,11 +449,14 @@ class _Step1 extends StatelessWidget {
   }
 }
 
+// ─── Step 2 ───────────────────────────────────────────────────────────────────
+
 class _Step2 extends StatelessWidget {
   final MoodType mood;
   final WeatherType weather;
   final CompanionType companion;
   final TextEditingController noteCtrl;
+  final bool saving;
   final ValueChanged<MoodType> onMoodChanged;
   final ValueChanged<WeatherType> onWeatherChanged;
   final ValueChanged<CompanionType> onCompanionChanged;
@@ -297,6 +469,7 @@ class _Step2 extends StatelessWidget {
     required this.weather,
     required this.companion,
     required this.noteCtrl,
+    required this.saving,
     required this.onMoodChanged,
     required this.onWeatherChanged,
     required this.onCompanionChanged,
@@ -372,7 +545,9 @@ class _Step2 extends StatelessWidget {
           TextField(
             controller: noteCtrl,
             maxLines: 3,
-            style: AppTextStyles.quote.copyWith(color: AppColors.textPrimary),
+            textCapitalization: TextCapitalization.sentences,
+            style:
+                AppTextStyles.quote.copyWith(color: AppColors.textPrimary),
             decoration: InputDecoration(
               hintText: 'Что запомнилось?',
               hintStyle: AppTextStyles.quote,
@@ -385,7 +560,7 @@ class _Step2 extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: onBack,
+                  onPressed: saving ? null : onBack,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.textSub,
                     side: const BorderSide(color: AppColors.border),
@@ -400,8 +575,17 @@ class _Step2 extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: ElevatedButton(
-                  onPressed: onSave,
-                  child: Text('Сохранить ✓', style: AppTextStyles.button),
+                  onPressed: saving ? null : onSave,
+                  child: saving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text('Сохранить ✓', style: AppTextStyles.button),
                 ),
               ),
             ],
@@ -412,17 +596,56 @@ class _Step2 extends StatelessWidget {
   }
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+class _PhotoOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color? color;
+  final VoidCallback onTap;
+
+  const _PhotoOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? AppColors.textPrimary;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.bgPrimary,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: c, size: 20),
+            const SizedBox(width: 12),
+            Text(label,
+                style: AppTextStyles.body.copyWith(color: c)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _FieldLabel extends StatelessWidget {
   final String text;
   const _FieldLabel(this.text);
 
   @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: AppTextStyles.micro.copyWith(color: AppColors.textSub),
-    );
-  }
+  Widget build(BuildContext context) => Text(
+        text,
+        style: AppTextStyles.micro.copyWith(color: AppColors.textSub),
+      );
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -430,9 +653,8 @@ class _SectionLabel extends StatelessWidget {
   const _SectionLabel(this.text);
 
   @override
-  Widget build(BuildContext context) {
-    return Text(text, style: AppTextStyles.h4.copyWith(fontSize: 15));
-  }
+  Widget build(BuildContext context) =>
+      Text(text, style: AppTextStyles.h4.copyWith(fontSize: 15));
 }
 
 class _Grid2x2<T> extends StatelessWidget {
@@ -479,13 +701,13 @@ class _Grid2x2<T> extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(emojiOf(item), style: const TextStyle(fontSize: 20)),
+                Text(emojiOf(item),
+                    style: const TextStyle(fontSize: 20)),
                 const SizedBox(width: 8),
                 Text(
                   labelOf(item),
-                  style: AppTextStyles.label.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTextStyles.label
+                      .copyWith(color: AppColors.textPrimary),
                 ),
               ],
             ),
