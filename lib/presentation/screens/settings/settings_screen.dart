@@ -1,7 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../providers/settings_provider.dart';
@@ -115,8 +115,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _logout(BuildContext context) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', false);
+    await FirebaseAuth.instance.signOut();
     if (context.mounted) context.go('/auth');
   }
 
@@ -158,14 +157,12 @@ class _ProfileCardState extends State<_ProfileCard> {
     _load();
   }
 
-  Future<void> _load() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (mounted) {
-      setState(() {
-        _name = prefs.getString('userName') ?? 'Пользователь';
-        _email = prefs.getString('userEmail') ?? '';
-      });
-    }
+  void _load() {
+    final user = FirebaseAuth.instance.currentUser;
+    setState(() {
+      _name = user?.displayName ?? 'Пользователь';
+      _email = user?.email ?? '';
+    });
   }
 
   @override

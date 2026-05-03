@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +15,7 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
+  bool _loading = false;
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
@@ -42,15 +44,48 @@ class _AuthScreenState extends State<AuthScreen> {
       setState(() => _error = error);
       return;
     }
-    setState(() => _error = null);
+    setState(() { _error = null; _loading = true; });
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', true);
-    await prefs.setString('userEmail', _emailCtrl.text.trim());
-    if (!_isLogin) {
-      await prefs.setString('userName', _nameCtrl.text.trim());
+    try {
+      if (_isLogin) {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailCtrl.text.trim(),
+          password: _passwordCtrl.text,
+        );
+      } else {
+        final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailCtrl.text.trim(),
+          password: _passwordCtrl.text,
+        );
+        await cred.user?.updateDisplayName(_nameCtrl.text.trim());
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userEmail', _emailCtrl.text.trim());
+      if (!_isLogin) {
+        await prefs.setString('userName', _nameCtrl.text.trim());
+      }
+
+      if (mounted) context.go('/');
+    } on FirebaseAuthException catch (e) {
+      setState(() { _loading = false; _error = _firebaseError(e.code); });
+    } catch (_) {
+      setState(() { _loading = false; _error = 'Что-то пошло не так. Попробуйте снова.'; });
     }
-    if (mounted) context.go('/');
+  }
+
+  String _firebaseError(String code) {
+    return switch (code) {
+      'user-not-found'        => 'Пользователь не найден',
+      'wrong-password'        => 'Неверный пароль',
+      'invalid-credential'    => 'Неверный email или пароль',
+      'email-already-in-use'  => 'Email уже зарегистрирован',
+      'weak-password'         => 'Пароль слишком простой',
+      'invalid-email'         => 'Некорректный email',
+      'network-request-failed'=> 'Нет соединения с сетью',
+      'too-many-requests'     => 'Слишком много попыток. Попробуйте позже',
+      _                       => 'Ошибка: $code',
+    };
   }
 
   @override
@@ -65,15 +100,10 @@ class _AuthScreenState extends State<AuthScreen> {
             children: [
               Center(child: OwnlyLogo(size: 56, radius: 18)),
               const SizedBox(height: 16),
-              Center(
-                child: Text('Ownly', style: AppTextStyles.h2),
-              ),
+              Center(child: Text('Ownly', style: AppTextStyles.h2)),
               const SizedBox(height: 6),
               Center(
-                child: Text(
-                  'Личный дневник мест',
-                  style: AppTextStyles.caption,
-                ),
+                child: Text('Личный дневник мест', style: AppTextStyles.caption),
               ),
               const SizedBox(height: 32),
 
@@ -102,7 +132,7 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Name field (register only)
+              // Name (register only)
               AnimatedSize(
                 duration: const Duration(milliseconds: 200),
                 child: _isLogin
@@ -114,9 +144,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           const SizedBox(height: 6),
                           TextField(
                             controller: _nameCtrl,
-                            decoration: const InputDecoration(
-                              hintText: 'Ваше имя',
-                            ),
+                            textCapitalization: TextCapitalization.words,
+                            decoration: const InputDecoration(hintText: 'Ваше имя'),
                           ),
                           const SizedBox(height: 16),
                         ],
@@ -128,6 +157,7 @@ class _AuthScreenState extends State<AuthScreen> {
               TextField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
                 decoration: const InputDecoration(hintText: 'email@example.com'),
               ),
               const SizedBox(height: 16),
@@ -141,6 +171,7 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 28),
 
+              // Error banner
               if (_error != null) ...[
                 Container(
                   width: double.infinity,
@@ -148,33 +179,44 @@ class _AuthScreenState extends State<AuthScreen> {
                   decoration: BoxDecoration(
                     color: AppColors.dangerRed.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.3)),
+                    border: Border.all(
+                        color: AppColors.dangerRed.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     _error!,
-                    style: AppTextStyles.caption.copyWith(color: AppColors.dangerRed),
+                    style: AppTextStyles.caption
+                        .copyWith(color: AppColors.dangerRed),
                   ),
                 ),
                 const SizedBox(height: 12),
               ],
 
+              // Submit button
               ElevatedButton(
-                onPressed: _submit,
-                child: Text(
-                  _isLogin ? 'Войти' : 'Создать аккаунт',
-                  style: AppTextStyles.button,
-                ),
+                onPressed: _loading ? null : _submit,
+                child: _loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        _isLogin ? 'Войти' : 'Создать аккаунт',
+                        style: AppTextStyles.button,
+                      ),
               ),
 
               if (_isLogin) ...[
                 const SizedBox(height: 16),
                 Center(
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _loading ? null : _resetPassword,
                     child: Text(
                       'Забыли пароль?',
-                      style: AppTextStyles.label
-                          .copyWith(color: AppColors.textSub),
+                      style: AppTextStyles.label.copyWith(color: AppColors.textSub),
                     ),
                   ),
                 ),
@@ -184,6 +226,24 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _resetPassword() async {
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() => _error = 'Введите email выше, чтобы сбросить пароль');
+      return;
+    }
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Письмо отправлено — проверьте почту')),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() => _error = _firebaseError(e.code));
+    }
   }
 }
 
