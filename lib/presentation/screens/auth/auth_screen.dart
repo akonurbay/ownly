@@ -17,6 +17,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
+  String? _error;
 
   @override
   void dispose() {
@@ -26,14 +27,28 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
+  String? _validate() {
+    final email = _emailCtrl.text.trim();
+    final password = _passwordCtrl.text;
+    if (email.isEmpty || !email.contains('@')) return 'Введите корректный email';
+    if (password.length < 6) return 'Пароль — минимум 6 символов';
+    if (!_isLogin && _nameCtrl.text.trim().isEmpty) return 'Введите имя';
+    return null;
+  }
+
   Future<void> _submit() async {
+    final error = _validate();
+    if (error != null) {
+      setState(() => _error = error);
+      return;
+    }
+    setState(() => _error = null);
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isLoggedIn', true);
-    if (_emailCtrl.text.isNotEmpty) {
-      await prefs.setString('userEmail', _emailCtrl.text);
-    }
-    if (!_isLogin && _nameCtrl.text.isNotEmpty) {
-      await prefs.setString('userName', _nameCtrl.text);
+    await prefs.setString('userEmail', _emailCtrl.text.trim());
+    if (!_isLogin) {
+      await prefs.setString('userName', _nameCtrl.text.trim());
     }
     if (mounted) context.go('/');
   }
@@ -75,12 +90,12 @@ class _AuthScreenState extends State<AuthScreen> {
                     _Tab(
                       label: 'Войти',
                       active: _isLogin,
-                      onTap: () => setState(() => _isLogin = true),
+                      onTap: () => setState(() { _isLogin = true; _error = null; }),
                     ),
                     _Tab(
                       label: 'Регистрация',
                       active: !_isLogin,
-                      onTap: () => setState(() => _isLogin = false),
+                      onTap: () => setState(() { _isLogin = false; _error = null; }),
                     ),
                   ],
                 ),
@@ -125,6 +140,23 @@ class _AuthScreenState extends State<AuthScreen> {
                 decoration: const InputDecoration(hintText: '••••••••'),
               ),
               const SizedBox(height: 28),
+
+              if (_error != null) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.dangerRed.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.dangerRed.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    _error!,
+                    style: AppTextStyles.caption.copyWith(color: AppColors.dangerRed),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
 
               ElevatedButton(
                 onPressed: _submit,
