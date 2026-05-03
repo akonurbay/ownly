@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/enums.dart';
@@ -91,7 +92,7 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
                             const SizedBox(width: 8),
                             _CircleButton(
                               icon: Icons.share_outlined,
-                              onTap: () {},
+                              onTap: () => _share(context),
                             ),
                           ],
                         ),
@@ -216,6 +217,34 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _share(BuildContext context) {
+    final place = ref.read(placesProvider).where((p) => p.id == widget.placeId).firstOrNull;
+    if (place == null) return;
+
+    final visits = ref.read(visitsProvider).where((v) => v.placeId == widget.placeId).toList();
+    final visitCount = visits.length;
+
+    final lines = [
+      '${place.category.emoji} ${place.name}',
+      '📍 ${place.city}  •  ${place.category.label}',
+      if (place.description.isNotEmpty) '«${place.description}»',
+      '',
+      '🚶 Визитов: $visitCount',
+      if (place.isFavorite) '❤️ В избранном',
+      '',
+      'Сохранено в Ownly — личном дневнике мест',
+    ];
+
+    final box = context.findRenderObject() as RenderBox?;
+    Share.share(
+      lines.join('\n'),
+      subject: place.name,
+      sharePositionOrigin: box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null,
     );
   }
 
