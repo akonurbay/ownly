@@ -63,7 +63,7 @@ class AnalyticsScreen extends ConsumerWidget {
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 1.6,
+                childAspectRatio: 1.35,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
@@ -300,8 +300,8 @@ class _MonthlyChart extends StatelessWidget {
         monthlyData.map((e) => e.$2).reduce((a, b) => a > b ? a : b);
 
     return Container(
-      height: 140,
-      padding: const EdgeInsets.all(16),
+      height: 160,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       decoration: BoxDecoration(
         color: AppColors.bgCard,
         borderRadius: BorderRadius.circular(20),
