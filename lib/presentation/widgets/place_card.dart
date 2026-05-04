@@ -15,19 +15,23 @@ class PlaceCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cat = place.category;
+    final oc = context.oc;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () => context.push('/place/${place.id}'),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.bgCard,
+          color: oc.bgCard,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
+          border: Border.all(color: oc.border),
+          boxShadow: [
             BoxShadow(
-              color: Color(0x0F2C2416),
+              color: isDark
+                  ? Colors.black.withValues(alpha: 0.2)
+                  : const Color(0x0F2C2416),
               blurRadius: 8,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -35,7 +39,6 @@ class PlaceCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Photo area
             SizedBox(
               height: 120,
               child: Stack(
@@ -46,17 +49,14 @@ class PlaceCard extends ConsumerWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [cat.bgColor, AppColors.bgDeep],
+                        colors: [cat.bgColor, oc.bgDeep],
                       ),
                     ),
                   ),
                   Center(
-                    child: Text(
-                      cat.emoji,
-                      style: const TextStyle(fontSize: 40),
-                    ),
+                    child: Text(cat.emoji,
+                        style: const TextStyle(fontSize: 40)),
                   ),
-                  // Category badge
                   Positioned(
                     left: 10,
                     bottom: 10,
@@ -75,21 +75,21 @@ class PlaceCard extends ConsumerWidget {
                           const SizedBox(width: 4),
                           Text(
                             cat.label,
-                            style: AppTextStyles.micro
+                            style: context.ts.micro
                                 .copyWith(color: cat.color),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  // Favourite heart
                   if (place.isFavorite)
                     Positioned(
                       top: 10,
                       right: 10,
                       child: GestureDetector(
-                        onTap: () =>
-                            ref.read(placesProvider.notifier).toggleFavorite(place.id),
+                        onTap: () => ref
+                            .read(placesProvider.notifier)
+                            .toggleFavorite(place.id),
                         child: const Icon(
                           Icons.favorite,
                           color: AppColors.accent,
@@ -100,7 +100,6 @@ class PlaceCard extends ConsumerWidget {
                 ],
               ),
             ),
-            // Content
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
               child: Column(
@@ -108,20 +107,20 @@ class PlaceCard extends ConsumerWidget {
                 children: [
                   Text(
                     place.name,
-                    style: AppTextStyles.cardTitle,
+                    style: context.ts.cardTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on,
-                          size: 12, color: AppColors.textMuted),
+                      Icon(Icons.location_on,
+                          size: 12, color: oc.textMuted),
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(
                           '${place.city} · $visitCount ${_visitWord(visitCount)}',
-                          style: AppTextStyles.caption,
+                          style: context.ts.caption,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

@@ -21,16 +21,14 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   int _step = 0;
   bool _saving = false;
 
-  // Step 1
-  final _nameCtrl = TextEditingController();
-  final _cityCtrl = TextEditingController();
-  final _noteCtrl = TextEditingController();
+  final _nameCtrl      = TextEditingController();
+  final _cityCtrl      = TextEditingController();
+  final _noteCtrl      = TextEditingController();
   PlaceCategory _category = PlaceCategory.cafe;
   String? _photoPath;
 
-  // Step 2
-  MoodType _mood = MoodType.good;
-  WeatherType _weather = WeatherType.sunny;
+  MoodType _mood           = MoodType.good;
+  WeatherType _weather     = WeatherType.sunny;
   CompanionType _companion = CompanionType.alone;
   final _visitNoteCtrl = TextEditingController();
 
@@ -54,14 +52,16 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   }
 
   void _showPhotoOptions() {
+    final oc = context.oc;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => Container(
         padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: AppColors.bgCard,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: oc.bgCard,
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           child: Column(
@@ -71,7 +71,7 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: oc.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -172,25 +172,24 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: oc.bgPrimary,
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => context.pop(),
-                    child: const Icon(Icons.close,
-                        color: AppColors.textSub, size: 22),
+                    child: Icon(Icons.close, color: oc.textSub, size: 22),
                   ),
                   const Spacer(),
                   Text(
                     _step == 0 ? 'Новое место' : 'Первый визит',
-                    style: AppTextStyles.h4,
+                    style: context.ts.h4,
                   ),
                   const Spacer(),
                   const SizedBox(width: 22),
@@ -198,7 +197,6 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
               ),
             ),
 
-            // Step dots
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -210,7 +208,7 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
                   width: i == _step ? 20 : 6,
                   height: 6,
                   decoration: BoxDecoration(
-                    color: i <= _step ? AppColors.accent : AppColors.border,
+                    color: i <= _step ? AppColors.accent : oc.border,
                     borderRadius: BorderRadius.circular(3),
                   ),
                 ),
@@ -284,24 +282,22 @@ class _Step1 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Photo area
           GestureDetector(
             onTap: onPhotoTap,
             child: Container(
               height: 160,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: AppColors.bgDeep,
+                color: oc.bgDeep,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: photoPath != null
-                      ? AppColors.accent
-                      : AppColors.border,
+                  color: photoPath != null ? AppColors.accent : oc.border,
                   width: 1.5,
                 ),
               ),
@@ -310,10 +306,7 @@ class _Step1 extends StatelessWidget {
                   ? Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.file(
-                          File(photoPath!),
-                          fit: BoxFit.cover,
-                        ),
+                        Image.file(File(photoPath!), fit: BoxFit.cover),
                         Positioned(
                           top: 10,
                           right: 10,
@@ -330,11 +323,9 @@ class _Step1 extends StatelessWidget {
                                 Icon(Icons.edit,
                                     color: Colors.white, size: 14),
                                 SizedBox(width: 4),
-                                Text(
-                                  'Изменить',
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 12),
-                                ),
+                                Text('Изменить',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 12)),
                               ],
                             ),
                           ),
@@ -348,7 +339,7 @@ class _Step1 extends StatelessWidget {
                           width: 48,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: AppColors.accentBg,
+                            color: oc.accentBg,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.camera_alt_outlined,
@@ -356,11 +347,11 @@ class _Step1 extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         Text('Добавить фото',
-                            style: AppTextStyles.label
+                            style: context.ts.label
                                 .copyWith(color: AppColors.accent)),
                         const SizedBox(height: 4),
                         Text('камера или галерея',
-                            style: AppTextStyles.caption),
+                            style: context.ts.caption),
                       ],
                     ),
             ),
@@ -403,16 +394,16 @@ class _Step1 extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: active ? AppColors.accent : AppColors.bgCard,
+                    color: active ? AppColors.accent : oc.bgCard,
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: active ? AppColors.accent : AppColors.border,
+                      color: active ? AppColors.accent : oc.border,
                     ),
                   ),
                   child: Text(
                     '${cat.emoji} ${cat.label}',
-                    style: AppTextStyles.label.copyWith(
-                      color: active ? Colors.white : AppColors.textSub,
+                    style: context.ts.label.copyWith(
+                      color: active ? Colors.white : oc.textSub,
                     ),
                   ),
                 ),
@@ -428,11 +419,10 @@ class _Step1 extends StatelessWidget {
             controller: noteCtrl,
             maxLines: 3,
             textCapitalization: TextCapitalization.sentences,
-            style:
-                AppTextStyles.quote.copyWith(color: AppColors.textPrimary),
+            style: context.ts.quote.copyWith(color: oc.textPrimary),
             decoration: InputDecoration(
               hintText: 'Что особенного в этом месте?',
-              hintStyle: AppTextStyles.quote,
+              hintStyle: context.ts.quote,
             ),
           ),
 
@@ -479,6 +469,7 @@ class _Step2 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       child: Column(
@@ -487,8 +478,8 @@ class _Step2 extends StatelessWidget {
           Center(
             child: Text(
               'Как прошёл этот визит?',
-              style: AppTextStyles.quote
-                  .copyWith(fontSize: 15, color: AppColors.textSub),
+              style: context.ts.quote
+                  .copyWith(fontSize: 15, color: oc.textSub),
             ),
           ),
           const SizedBox(height: 20),
@@ -498,7 +489,7 @@ class _Step2 extends StatelessWidget {
           _Grid2x2(
             items: MoodType.values,
             selected: mood,
-            activeColor: AppColors.accentBg,
+            activeColor: oc.accentBg,
             activeBorder: AppColors.accent,
             labelOf: (m) => m.label,
             emojiOf: (m) => m.emoji,
@@ -512,7 +503,7 @@ class _Step2 extends StatelessWidget {
           _Grid2x2(
             items: WeatherType.values,
             selected: weather,
-            activeColor: AppColors.blueBg,
+            activeColor: oc.accentBg,
             activeBorder: AppColors.blue,
             labelOf: (w) => w.label,
             emojiOf: (w) => w.emoji,
@@ -526,11 +517,11 @@ class _Step2 extends StatelessWidget {
           _Grid2x2(
             items: CompanionType.values,
             selected: companion,
-            activeColor: AppColors.accentBg,
+            activeColor: oc.accentBg,
             activeBorder: AppColors.accent,
             labelOf: (c) => c.label,
             emojiOf: (c) => switch (c) {
-              CompanionType.alone => '🧍',
+              CompanionType.alone  => '🧍',
               CompanionType.friend => '👥',
               CompanionType.couple => '💑',
               CompanionType.family => '👨‍👩‍👧',
@@ -546,11 +537,10 @@ class _Step2 extends StatelessWidget {
             controller: noteCtrl,
             maxLines: 3,
             textCapitalization: TextCapitalization.sentences,
-            style:
-                AppTextStyles.quote.copyWith(color: AppColors.textPrimary),
+            style: context.ts.quote.copyWith(color: oc.textPrimary),
             decoration: InputDecoration(
               hintText: 'Что запомнилось?',
-              hintStyle: AppTextStyles.quote,
+              hintStyle: context.ts.quote,
             ),
           ),
 
@@ -562,8 +552,8 @@ class _Step2 extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: saving ? null : onBack,
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textSub,
-                    side: const BorderSide(color: AppColors.border),
+                    foregroundColor: oc.textSub,
+                    side: BorderSide(color: oc.border),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999)),
                     minimumSize: const Size(0, 52),
@@ -613,23 +603,23 @@ class _PhotoOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? AppColors.textPrimary;
+    final oc = context.oc;
+    final c = color ?? oc.textPrimary;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.bgPrimary,
+          color: oc.bgPrimary,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: oc.border),
         ),
         child: Row(
           children: [
             Icon(icon, color: c, size: 20),
             const SizedBox(width: 12),
-            Text(label,
-                style: AppTextStyles.body.copyWith(color: c)),
+            Text(label, style: context.ts.body.copyWith(color: c)),
           ],
         ),
       ),
@@ -644,7 +634,7 @@ class _FieldLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Text(
         text,
-        style: AppTextStyles.micro.copyWith(color: AppColors.textSub),
+        style: context.ts.micro.copyWith(color: context.oc.textSub),
       );
 }
 
@@ -654,7 +644,7 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Text(text, style: AppTextStyles.h4.copyWith(fontSize: 15));
+      Text(text, style: context.ts.h4.copyWith(fontSize: 15));
 }
 
 class _Grid2x2<T> extends StatelessWidget {
@@ -678,6 +668,7 @@ class _Grid2x2<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return GridView.count(
       crossAxisCount: 2,
       crossAxisSpacing: 10,
@@ -692,22 +683,20 @@ class _Grid2x2<T> extends StatelessWidget {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: active ? activeColor : AppColors.bgCard,
+              color: active ? activeColor : oc.bgCard,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: active ? activeBorder : AppColors.border,
+                color: active ? activeBorder : oc.border,
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(emojiOf(item),
-                    style: const TextStyle(fontSize: 20)),
+                Text(emojiOf(item), style: const TextStyle(fontSize: 20)),
                 const SizedBox(width: 8),
                 Text(
                   labelOf(item),
-                  style: AppTextStyles.label
-                      .copyWith(color: AppColors.textPrimary),
+                  style: context.ts.label,
                 ),
               ],
             ),

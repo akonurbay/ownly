@@ -10,13 +10,14 @@ class VisitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: oc.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: oc.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -25,8 +26,7 @@ class VisitCard extends StatelessWidget {
             children: [
               Text(
                 _formatDate(visit.visitedAt),
-                style: AppTextStyles.label.copyWith(
-                  color: AppColors.textPrimary,
+                style: context.ts.label.copyWith(
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                 ),
@@ -38,15 +38,12 @@ class VisitCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
-            visit.companion.label,
-            style: AppTextStyles.caption,
-          ),
+          Text(visit.companion.label, style: context.ts.caption),
           if (visit.note != null && visit.note!.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
               '«${visit.note}»',
-              style: AppTextStyles.quote.copyWith(fontSize: 13),
+              style: context.ts.quote.copyWith(fontSize: 13),
             ),
           ],
         ],

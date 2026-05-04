@@ -44,20 +44,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
-            colors: [Color(0xFFEDE6D9), Color(0xFFF7F2EA)],
-            stops: [0.0, 1.0],
-            transform: GradientRotation(160 * 3.14159 / 180),
+            colors: [oc.bgDeep, oc.bgPrimary],
+            stops: const [0.0, 1.0],
+            transform: const GradientRotation(160 * 3.14159 / 180),
           ),
         ),
         child: Stack(
           children: [
-            // Decorative blobs
             Positioned(
               top: -60,
               right: -60,
@@ -65,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 width: 240,
                 height: 240,
                 decoration: BoxDecoration(
-                  color: AppColors.accentBg.withValues(alpha: 0.6),
+                  color: oc.accentBg.withValues(alpha: 0.6),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 width: 280,
                 height: 280,
                 decoration: BoxDecoration(
-                  color: AppColors.goldBg.withValues(alpha: 0.4),
+                  color: oc.goldBg.withValues(alpha: 0.4),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -90,7 +90,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: [
                     const OwnlyLogo(),
                     const Spacer(),
-                    // Slide content with animation
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 400),
                       switchInCurve: Curves.easeOut,
@@ -100,7 +99,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                     const Spacer(),
-                    // Dots
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
@@ -111,16 +109,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           width: i == _page ? 20 : 6,
                           height: 6,
                           decoration: BoxDecoration(
-                            color: i == _page
-                                ? AppColors.accent
-                                : AppColors.border,
+                            color: i == _page ? AppColors.accent : oc.border,
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
-                    // CTA
                     ElevatedButton(
                       onPressed: () {
                         if (_page < _slides.length - 1) {
@@ -141,8 +136,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           onPressed: _finish,
                           child: Text(
                             'Пропустить',
-                            style: AppTextStyles.label
-                                .copyWith(color: AppColors.textSub),
+                            style: context.ts.label
+                                .copyWith(color: oc.textSub),
                           ),
                         ),
                       ),
@@ -181,7 +176,7 @@ class _SlideContent extends StatelessWidget {
         Text(
           slide.title,
           textAlign: TextAlign.center,
-          style: AppTextStyles.h1,
+          style: context.ts.h1,
         ),
         const SizedBox(height: 16),
         SizedBox(
@@ -189,7 +184,7 @@ class _SlideContent extends StatelessWidget {
           child: Text(
             slide.sub,
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyLg,
+            style: context.ts.bodyLg,
           ),
         ),
       ],

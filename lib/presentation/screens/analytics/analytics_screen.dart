@@ -13,17 +13,16 @@ class AnalyticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final places = ref.watch(placesProvider);
     final visits = ref.watch(visitsProvider);
+    final oc = context.oc;
 
     final cities = places.map((p) => p.city).toSet().length;
     final favorites = places.where((p) => p.isFavorite).length;
 
-    // Category counts
     final catCounts = <PlaceCategory, int>{};
     for (final p in places) {
       catCounts[p.category] = (catCounts[p.category] ?? 0) + 1;
     }
 
-    // Monthly visits (last 6 months)
     final now = DateTime.now();
     final monthlyData = List.generate(6, (i) {
       final month = DateTime(now.year, now.month - 5 + i);
@@ -35,7 +34,6 @@ class AnalyticsScreen extends ConsumerWidget {
       return (month, count);
     });
 
-    // Mood counts
     final moodCounts = <MoodType, int>{};
     for (final v in visits) {
       moodCounts[v.mood] = (moodCounts[v.mood] ?? 0) + 1;
@@ -45,20 +43,18 @@ class AnalyticsScreen extends ConsumerWidget {
     final totalCat = places.length;
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: oc.bgPrimary,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Аналитика', style: AppTextStyles.h2),
+              Text('Аналитика', style: context.ts.h2),
               const SizedBox(height: 4),
-              Text('Статистика ваших путешествий',
-                  style: AppTextStyles.caption),
+              Text('Статистика ваших путешествий', style: context.ts.caption),
               const SizedBox(height: 20),
 
-              // Stats 2x2 grid
               GridView.count(
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
@@ -81,8 +77,8 @@ class AnalyticsScreen extends ConsumerWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.accentBg, AppColors.goldBg],
+                  gradient: LinearGradient(
+                    colors: [oc.accentBg, oc.goldBg],
                   ),
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -91,18 +87,15 @@ class AnalyticsScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'ПРОФИЛЬ ПУТЕШЕСТВЕННИКА',
-                      style: AppTextStyles.micro
+                      style: context.ts.micro
                           .copyWith(color: AppColors.accentDark),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      _profileTitle(catCounts),
-                      style: AppTextStyles.h3,
-                    ),
+                    Text(_profileTitle(catCounts), style: context.ts.h3),
                     const SizedBox(height: 4),
                     Text(
                       _profileSub(places.length, totalVisits),
-                      style: AppTextStyles.caption,
+                      style: context.ts.caption,
                     ),
                   ],
                 ),
@@ -110,25 +103,22 @@ class AnalyticsScreen extends ConsumerWidget {
 
               const SizedBox(height: 20),
 
-              // Category donut
               if (places.isNotEmpty) ...[
-                Text('Категории', style: AppTextStyles.h4),
+                Text('Категории', style: context.ts.h4),
                 const SizedBox(height: 12),
                 _CategoryChart(catCounts: catCounts, total: totalCat),
                 const SizedBox(height: 20),
               ],
 
-              // Bar chart — monthly activity
               if (visits.isNotEmpty) ...[
-                Text('Активность по месяцам', style: AppTextStyles.h4),
+                Text('Активность по месяцам', style: context.ts.h4),
                 const SizedBox(height: 12),
                 _MonthlyChart(monthlyData: monthlyData),
                 const SizedBox(height: 20),
               ],
 
-              // Mood donut
               if (visits.isNotEmpty) ...[
-                Text('Настроения', style: AppTextStyles.h4),
+                Text('Настроения', style: context.ts.h4),
                 const SizedBox(height: 12),
                 _MoodChart(moodCounts: moodCounts, total: totalVisits),
                 const SizedBox(height: 20),
@@ -144,11 +134,11 @@ class AnalyticsScreen extends ConsumerWidget {
     if (counts.isEmpty) return '🗺 Исследователь';
     final top = counts.entries.reduce((a, b) => a.value >= b.value ? a : b);
     return switch (top.key) {
-      PlaceCategory.cafe => '☕ Кофейный исследователь',
-      PlaceCategory.nature => '🌿 Любитель природы',
-      PlaceCategory.museum => '🏛 Ценитель культуры',
+      PlaceCategory.cafe       => '☕ Кофейный исследователь',
+      PlaceCategory.nature     => '🌿 Любитель природы',
+      PlaceCategory.museum     => '🏛 Ценитель культуры',
       PlaceCategory.restaurant => '🍽 Гастрономический турист',
-      PlaceCategory.other => '📍 Городской исследователь',
+      PlaceCategory.other      => '📍 Городской исследователь',
     };
   }
 
@@ -159,17 +149,13 @@ class AnalyticsScreen extends ConsumerWidget {
 
   String _placeWord(int n) {
     if (n % 10 == 1 && n % 100 != 11) return 'место';
-    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) {
-      return 'места';
-    }
+    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'места';
     return 'мест';
   }
 
   String _visitWord(int n) {
     if (n % 10 == 1 && n % 100 != 11) return 'визит';
-    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) {
-      return 'визита';
-    }
+    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'визита';
     return 'визитов';
   }
 }
@@ -183,12 +169,13 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: oc.bgCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: oc.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -196,8 +183,8 @@ class _StatTile extends StatelessWidget {
         children: [
           Text(emoji, style: const TextStyle(fontSize: 22)),
           const SizedBox(height: 4),
-          Text(value, style: AppTextStyles.h2),
-          Text(label, style: AppTextStyles.caption),
+          Text(value, style: context.ts.h2),
+          Text(label, style: context.ts.caption),
         ],
       ),
     );
@@ -213,6 +200,7 @@ class _CategoryChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (total == 0) return const SizedBox.shrink();
+    final oc = context.oc;
 
     final sections = catCounts.entries.map((e) {
       return PieChartSectionData(
@@ -227,9 +215,9 @@ class _CategoryChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: oc.bgCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: oc.border),
       ),
       child: Row(
         children: [
@@ -264,14 +252,13 @@ class _CategoryChart extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(e.key.label,
-                            style: AppTextStyles.caption),
+                        child: Text(e.key.label, style: context.ts.caption),
                       ),
                       Text(
                         '$pct%',
-                        style: AppTextStyles.caption.copyWith(
+                        style: context.ts.caption.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSub,
+                          color: oc.textSub,
                         ),
                       ),
                     ],
@@ -293,8 +280,11 @@ class _MonthlyChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const monthLabels = ['янв', 'фев', 'мар', 'апр', 'май', 'июн',
-        'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+    const monthLabels = [
+      'янв', 'фев', 'мар', 'апр', 'май', 'июн',
+      'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'
+    ];
+    final oc = context.oc;
 
     final maxVal =
         monthlyData.map((e) => e.$2).reduce((a, b) => a > b ? a : b);
@@ -303,9 +293,9 @@ class _MonthlyChart extends StatelessWidget {
       height: 160,
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: oc.bgCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: oc.border),
       ),
       child: BarChart(
         BarChartData(
@@ -333,14 +323,11 @@ class _MonthlyChart extends StatelessWidget {
           gridData: const FlGridData(show: false),
           titlesData: FlTitlesData(
             leftTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
+                sideTitles: SideTitles(showTitles: false)),
             rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
+                sideTitles: SideTitles(showTitles: false)),
             topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
+                sideTitles: SideTitles(showTitles: false)),
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -352,7 +339,7 @@ class _MonthlyChart extends StatelessWidget {
                   final month = monthlyData[idx].$1;
                   return Text(
                     monthLabels[month.month - 1],
-                    style: AppTextStyles.micro.copyWith(fontSize: 10),
+                    style: context.ts.micro.copyWith(fontSize: 10),
                   );
                 },
               ),
@@ -373,6 +360,7 @@ class _MoodChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (total == 0) return const SizedBox.shrink();
+    final oc = context.oc;
 
     final sections = moodCounts.entries.map((e) {
       return PieChartSectionData(
@@ -387,9 +375,9 @@ class _MoodChart extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: oc.bgCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: oc.border),
       ),
       child: Row(
         children: [
@@ -427,14 +415,14 @@ class _MoodChart extends StatelessWidget {
                           style: const TextStyle(fontSize: 13)),
                       const SizedBox(width: 4),
                       Expanded(
-                        child: Text(e.key.label,
-                            style: AppTextStyles.caption),
+                        child:
+                            Text(e.key.label, style: context.ts.caption),
                       ),
                       Text(
                         '$pct%',
-                        style: AppTextStyles.caption.copyWith(
+                        style: context.ts.caption.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSub,
+                          color: oc.textSub,
                         ),
                       ),
                     ],

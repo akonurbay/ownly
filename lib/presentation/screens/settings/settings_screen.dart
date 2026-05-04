@@ -13,23 +13,22 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
+    final oc = context.oc;
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: oc.bgPrimary,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Настройки', style: AppTextStyles.h2),
+              Text('Настройки', style: context.ts.h2),
               const SizedBox(height: 20),
 
-              // Profile card
               _ProfileCard(),
               const SizedBox(height: 24),
 
-              // Appearance
               _SectionHeader('Внешний вид'),
               const SizedBox(height: 8),
               _SettingsGroup(children: [
@@ -42,7 +41,6 @@ class SettingsScreen extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // Notifications
               _SectionHeader('Уведомления'),
               const SizedBox(height: 8),
               _SettingsGroup(children: [
@@ -55,7 +53,6 @@ class SettingsScreen extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // Data
               _SectionHeader('Данные'),
               const SizedBox(height: 8),
               _SettingsGroup(children: [
@@ -79,7 +76,6 @@ class SettingsScreen extends ConsumerWidget {
 
               const SizedBox(height: 16),
 
-              // About
               _SectionHeader('О приложении'),
               const SizedBox(height: 8),
               _SettingsGroup(children: [
@@ -93,7 +89,6 @@ class SettingsScreen extends ConsumerWidget {
 
               const SizedBox(height: 24),
 
-              // Logout
               OutlinedButton(
                 onPressed: () => _logout(context),
                 style: OutlinedButton.styleFrom(
@@ -167,20 +162,21 @@ class _ProfileCardState extends State<_ProfileCard> {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: oc.bgCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: oc.border),
       ),
       child: Row(
         children: [
           Container(
             width: 50,
             height: 50,
-            decoration: const BoxDecoration(
-              color: AppColors.accentBg,
+            decoration: BoxDecoration(
+              color: oc.accentBg,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
@@ -192,16 +188,15 @@ class _ProfileCardState extends State<_ProfileCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(_name,
-                    style: AppTextStyles.cardTitle.copyWith(fontSize: 15)),
+                    style: context.ts.cardTitle.copyWith(fontSize: 15)),
                 if (_email.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(_email, style: AppTextStyles.caption),
+                  Text(_email, style: context.ts.caption),
                 ],
               ],
             ),
           ),
-          Icon(Icons.edit_outlined,
-              size: 18, color: AppColors.textMuted),
+          Icon(Icons.edit_outlined, size: 18, color: oc.textMuted),
         ],
       ),
     );
@@ -216,9 +211,9 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text.toUpperCase(),
-      style: AppTextStyles.micro.copyWith(
+      style: context.ts.micro.copyWith(
         fontWeight: FontWeight.w700,
-        letterSpacing: 0.08 * 11,
+        letterSpacing: 0.88,
       ),
     );
   }
@@ -230,11 +225,12 @@ class _SettingsGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.bgCard,
+        color: oc.bgCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: oc.border),
       ),
       child: Column(children: children),
     );
@@ -258,7 +254,7 @@ class _ToggleRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: AppTextStyles.body)),
+          Expanded(child: Text(label, style: context.ts.body)),
           GestureDetector(
             onTap: () => onChanged(!value),
             child: _IOSToggle(value: value),
@@ -280,7 +276,7 @@ class _IOSToggle extends StatelessWidget {
       width: 44,
       height: 26,
       decoration: BoxDecoration(
-        color: value ? AppColors.toggleActive : AppColors.border,
+        color: value ? AppColors.toggleActive : context.oc.border,
         borderRadius: BorderRadius.circular(13),
       ),
       child: AnimatedAlign(
@@ -318,11 +314,11 @@ class _ArrowRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: AppTextStyles.body.copyWith(color: labelColor),
+                style: context.ts.body.copyWith(color: labelColor),
               ),
             ),
             Icon(Icons.chevron_right,
-                size: 18, color: labelColor ?? AppColors.textMuted),
+                size: 18, color: labelColor ?? context.oc.textMuted),
           ],
         ),
       ),
@@ -342,8 +338,8 @@ class _InfoRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: AppTextStyles.body)),
-          Text(value, style: AppTextStyles.caption),
+          Expanded(child: Text(label, style: context.ts.body)),
+          Text(value, style: context.ts.caption),
         ],
       ),
     );
@@ -353,9 +349,9 @@ class _InfoRow extends StatelessWidget {
 class _Divider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(left: 16),
-      child: Divider(height: 1, color: AppColors.borderSub),
+    return Padding(
+      padding: const EdgeInsets.only(left: 16),
+      child: Divider(height: 1, color: context.oc.borderSub),
     );
   }
 }

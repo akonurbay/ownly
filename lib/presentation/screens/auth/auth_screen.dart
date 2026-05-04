@@ -76,25 +76,26 @@ class _AuthScreenState extends State<AuthScreen> {
 
   String _firebaseError(String code) {
     return switch (code.toLowerCase()) {
-      'user-not-found'               => 'Пользователь не найден',
-      'wrong-password'               => 'Неверный пароль',
-      'invalid-credential'           => 'Неверный email или пароль',
-      'invalid_login_credentials'    => 'Неверный email или пароль',
-      'email-already-in-use'         => 'Email уже зарегистрирован',
-      'weak-password'                => 'Пароль слишком простой',
-      'invalid-email'                => 'Некорректный email',
-      'user-disabled'                => 'Аккаунт заблокирован',
-      'network-request-failed'       => 'Нет соединения с сетью',
-      'too-many-requests'            => 'Слишком много попыток. Попробуйте позже',
-      'channel-error'                => 'Нет соединения с сетью',
-      _                              => 'Ошибка входа. Попробуйте снова',
+      'user-not-found'            => 'Пользователь не найден',
+      'wrong-password'            => 'Неверный пароль',
+      'invalid-credential'        => 'Неверный email или пароль',
+      'invalid_login_credentials' => 'Неверный email или пароль',
+      'email-already-in-use'      => 'Email уже зарегистрирован',
+      'weak-password'             => 'Пароль слишком простой',
+      'invalid-email'             => 'Некорректный email',
+      'user-disabled'             => 'Аккаунт заблокирован',
+      'network-request-failed'    => 'Нет соединения с сетью',
+      'too-many-requests'         => 'Слишком много попыток. Попробуйте позже',
+      'channel-error'             => 'Нет соединения с сетью',
+      _                           => 'Ошибка входа. Попробуйте снова',
     };
   }
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: oc.bgPrimary,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 40, 24, 32),
@@ -103,10 +104,10 @@ class _AuthScreenState extends State<AuthScreen> {
             children: [
               Center(child: OwnlyLogo(size: 56, radius: 18)),
               const SizedBox(height: 16),
-              Center(child: Text('Ownly', style: AppTextStyles.h2)),
+              Center(child: Text('Ownly', style: context.ts.h2)),
               const SizedBox(height: 6),
               Center(
-                child: Text('Личный дневник мест', style: AppTextStyles.caption),
+                child: Text('Личный дневник мест', style: context.ts.caption),
               ),
               const SizedBox(height: 32),
 
@@ -115,7 +116,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 height: 44,
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: AppColors.bgDeep,
+                  color: oc.bgDeep,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Row(
@@ -135,7 +136,6 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Name (register only)
               AnimatedSize(
                 duration: const Duration(milliseconds: 200),
                 child: _isLogin
@@ -148,7 +148,8 @@ class _AuthScreenState extends State<AuthScreen> {
                           TextField(
                             controller: _nameCtrl,
                             textCapitalization: TextCapitalization.words,
-                            decoration: const InputDecoration(hintText: 'Ваше имя'),
+                            decoration:
+                                const InputDecoration(hintText: 'Ваше имя'),
                           ),
                           const SizedBox(height: 16),
                         ],
@@ -174,7 +175,6 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
               const SizedBox(height: 28),
 
-              // Error banner
               if (_error != null) ...[
                 Container(
                   width: double.infinity,
@@ -187,14 +187,13 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   child: Text(
                     _error!,
-                    style: AppTextStyles.caption
+                    style: context.ts.caption
                         .copyWith(color: AppColors.dangerRed),
                   ),
                 ),
                 const SizedBox(height: 12),
               ],
 
-              // Submit button
               ElevatedButton(
                 onPressed: _loading ? null : _submit,
                 child: _loading
@@ -219,7 +218,8 @@ class _AuthScreenState extends State<AuthScreen> {
                     onPressed: _loading ? null : _resetPassword,
                     child: Text(
                       'Забыли пароль?',
-                      style: AppTextStyles.label.copyWith(color: AppColors.textSub),
+                      style: context.ts.label
+                          .copyWith(color: oc.textSub),
                     ),
                   ),
                 ),
@@ -259,13 +259,14 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           decoration: BoxDecoration(
-            color: active ? AppColors.bgCard : Colors.transparent,
+            color: active ? oc.bgCard : Colors.transparent,
             borderRadius: BorderRadius.circular(999),
             boxShadow: active
                 ? [
@@ -280,8 +281,8 @@ class _Tab extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             label,
-            style: AppTextStyles.label.copyWith(
-              color: active ? AppColors.textPrimary : AppColors.textSub,
+            style: context.ts.label.copyWith(
+              color: active ? oc.textPrimary : oc.textSub,
               fontWeight: active ? FontWeight.w600 : FontWeight.w400,
             ),
           ),
@@ -296,10 +297,8 @@ class _FieldLabel extends StatelessWidget {
   const _FieldLabel(this.text);
 
   @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: AppTextStyles.micro.copyWith(color: AppColors.textSub),
-    );
-  }
+  Widget build(BuildContext context) => Text(
+        text,
+        style: context.ts.micro.copyWith(color: context.oc.textSub),
+      );
 }

@@ -22,6 +22,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final places = ref.watch(placesProvider);
     final visits = ref.watch(visitsProvider);
+    final oc = context.oc;
 
     final filtered = places.where((p) {
       final matchesSearch = _search.isEmpty ||
@@ -35,7 +36,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final totalVisits = visits.length;
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: oc.bgPrimary,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -50,16 +51,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Мои места', style: AppTextStyles.h2),
+                          Text('Мои места', style: context.ts.h2),
                           const SizedBox(height: 2),
                           Text(
                             '${places.length} ${_placeWord(places.length)} · $totalVisits ${_visitWord(totalVisits)}',
-                            style: AppTextStyles.caption,
+                            style: context.ts.caption,
                           ),
                         ],
                       ),
                     ),
-                    // FAB
                     GestureDetector(
                       onTap: () => context.push('/add-place'),
                       child: Container(
@@ -92,19 +92,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.bgCard,
+                    color: oc.bgCard,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: oc.border),
                   ),
                   child: TextField(
                     onChanged: (v) => setState(() => _search = v),
-                    style: AppTextStyles.body.copyWith(fontSize: 14),
+                    style: context.ts.body.copyWith(fontSize: 14),
                     decoration: InputDecoration(
                       hintText: 'Поиск по названию или городу...',
-                      hintStyle: AppTextStyles.body.copyWith(
-                          color: AppColors.textMuted, fontSize: 14),
-                      prefixIcon: const Icon(Icons.search,
-                          size: 15, color: AppColors.textMuted),
+                      hintStyle:
+                          context.ts.body.copyWith(color: oc.textMuted, fontSize: 14),
+                      prefixIcon:
+                          Icon(Icons.search, size: 15, color: oc.textMuted),
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
@@ -143,7 +143,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
-            // Grid
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             if (filtered.isEmpty)
               SliverToBoxAdapter(
@@ -157,12 +156,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         _search.isNotEmpty || _activeCategory != null
                             ? 'Ничего не найдено'
                             : 'Пока нет мест',
-                        style: AppTextStyles.h4,
+                        style: context.ts.h4,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Нажмите + чтобы добавить первое место',
-                        style: AppTextStyles.caption,
+                        style: context.ts.caption,
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -173,7 +172,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                 sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
@@ -182,9 +182,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   delegate: SliverChildBuilderDelegate(
                     (context, i) {
                       final place = filtered[i];
-                      final count = visits
-                          .where((v) => v.placeId == place.id)
-                          .length;
+                      final count =
+                          visits.where((v) => v.placeId == place.id).length;
                       return PlaceCard(place: place, visitCount: count);
                     },
                     childCount: filtered.length,
@@ -227,6 +226,7 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -234,16 +234,16 @@ class _FilterChip extends StatelessWidget {
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         decoration: BoxDecoration(
-          color: active ? AppColors.accent : AppColors.bgCard,
+          color: active ? AppColors.accent : oc.bgCard,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: active ? AppColors.accent : AppColors.border,
+            color: active ? AppColors.accent : oc.border,
           ),
         ),
         child: Text(
           label,
-          style: AppTextStyles.label.copyWith(
-            color: active ? Colors.white : AppColors.textSub,
+          style: context.ts.label.copyWith(
+            color: active ? Colors.white : oc.textSub,
           ),
         ),
       ),

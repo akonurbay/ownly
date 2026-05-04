@@ -23,6 +23,7 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
   Widget build(BuildContext context) {
     final places = ref.watch(placesProvider);
     final place = places.where((p) => p.id == widget.placeId).firstOrNull;
+    final oc = context.oc;
 
     if (place == null) {
       return Scaffold(
@@ -40,10 +41,9 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
     final bestMood = _bestMood(visits);
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: oc.bgPrimary,
       body: CustomScrollView(
         slivers: [
-          // Hero area
           SliverToBoxAdapter(
             child: Stack(
               children: [
@@ -53,7 +53,7 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [cat.bgColor, AppColors.bgDeep],
+                      colors: [cat.bgColor, oc.bgDeep],
                     ),
                   ),
                   child: Center(
@@ -84,7 +84,7 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
                                   : Icons.favorite_border,
                               iconColor: place.isFavorite
                                   ? AppColors.accent
-                                  : AppColors.textSub,
+                                  : oc.textSub,
                               onTap: () => ref
                                   .read(placesProvider.notifier)
                                   .toggleFavorite(place.id),
@@ -104,18 +104,16 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
             ),
           ),
 
-          // Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title + badge
                   Row(
                     children: [
                       Expanded(
-                        child: Text(place.name, style: AppTextStyles.h2),
+                        child: Text(place.name, style: context.ts.h2),
                       ),
                       const SizedBox(width: 8),
                       Container(
@@ -133,7 +131,7 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
                             const SizedBox(width: 4),
                             Text(
                               cat.label,
-                              style: AppTextStyles.micro
+                              style: context.ts.micro
                                   .copyWith(color: cat.color),
                             ),
                           ],
@@ -143,28 +141,25 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
                   ),
                   const SizedBox(height: 8),
 
-                  // City
                   Row(
                     children: [
-                      const Icon(Icons.location_on,
-                          size: 13, color: AppColors.textMuted),
+                      Icon(Icons.location_on,
+                          size: 13, color: oc.textMuted),
                       const SizedBox(width: 4),
-                      Text(place.city, style: AppTextStyles.caption),
+                      Text(place.city, style: context.ts.caption),
                     ],
                   ),
 
-                  // Description/quote
                   if (place.description.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
                       '«${place.description}»',
-                      style: AppTextStyles.quote,
+                      style: context.ts.quote,
                     ),
                   ],
 
                   const SizedBox(height: 20),
 
-                  // Stats row
                   Row(
                     children: [
                       _StatCard(
@@ -186,17 +181,15 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
 
                   const SizedBox(height: 20),
 
-                  // Add visit button
                   ElevatedButton(
                     onPressed: () => _showAddVisitSheet(context),
-                    child:
-                        Text('+ Добавить визит', style: AppTextStyles.button),
+                    child: Text('+ Добавить визит',
+                        style: AppTextStyles.button),
                   ),
 
                   const SizedBox(height: 24),
 
-                  // Visit history
-                  Text('История визитов', style: AppTextStyles.h4),
+                  Text('История визитов', style: context.ts.h4),
                   const SizedBox(height: 12),
 
                   if (visits.isEmpty)
@@ -205,7 +198,7 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
                         padding: const EdgeInsets.all(24),
                         child: Text(
                           'Пока нет визитов',
-                          style: AppTextStyles.caption,
+                          style: context.ts.caption,
                         ),
                       ),
                     )
@@ -221,18 +214,21 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
   }
 
   void _share(BuildContext context) {
-    final place = ref.read(placesProvider).where((p) => p.id == widget.placeId).firstOrNull;
+    final place =
+        ref.read(placesProvider).where((p) => p.id == widget.placeId).firstOrNull;
     if (place == null) return;
 
-    final visits = ref.read(visitsProvider).where((v) => v.placeId == widget.placeId).toList();
-    final visitCount = visits.length;
+    final visits = ref
+        .read(visitsProvider)
+        .where((v) => v.placeId == widget.placeId)
+        .toList();
 
     final lines = [
       '${place.category.emoji} ${place.name}',
       '📍 ${place.city}  •  ${place.category.label}',
       if (place.description.isNotEmpty) '«${place.description}»',
       '',
-      '🚶 Визитов: $visitCount',
+      '🚶 Визитов: ${visits.length}',
       if (place.isFavorite) '❤️ В избранном',
       '',
       'Сохранено в Ownly — личном дневнике мест',
@@ -286,13 +282,13 @@ class _CircleButton extends StatelessWidget {
         width: 36,
         height: 36,
         decoration: BoxDecoration(
-          color: AppColors.bgCard.withValues(alpha: 0.85),
+          color: context.oc.bgCard.withValues(alpha: 0.85),
           shape: BoxShape.circle,
         ),
         child: Icon(
           icon,
           size: 20,
-          color: iconColor ?? AppColors.textSub,
+          color: iconColor ?? context.oc.textSub,
         ),
       ),
     );
@@ -307,22 +303,23 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.bgCard,
+          color: oc.bgCard,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: oc.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: AppTextStyles.micro),
+            Text(label, style: context.ts.micro),
             const SizedBox(height: 4),
             Text(
               value,
-              style: AppTextStyles.label.copyWith(
+              style: context.ts.label.copyWith(
                 fontWeight: FontWeight.w600,
                 fontSize: 13,
               ),
@@ -357,14 +354,16 @@ class _AddVisitSheetState extends State<_AddVisitSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Consumer(
       builder: (context, ref, _) => Container(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
-        decoration: const BoxDecoration(
-          color: AppColors.bgPrimary,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: oc.bgPrimary,
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           child: Padding(
@@ -378,17 +377,16 @@ class _AddVisitSheetState extends State<_AddVisitSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: AppColors.border,
+                      color: oc.border,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text('Добавить визит', style: AppTextStyles.h3),
+                Text('Добавить визит', style: context.ts.h3),
                 const SizedBox(height: 20),
 
-                // Mood
-                Text('Настроение', style: AppTextStyles.micro),
+                Text('Настроение', style: context.ts.micro),
                 const SizedBox(height: 8),
                 Row(
                   children: MoodType.values
@@ -402,24 +400,24 @@ class _AddVisitSheetState extends State<_AddVisitSheet> {
                                     vertical: 10),
                                 decoration: BoxDecoration(
                                   color: _mood == m
-                                      ? AppColors.accentBg
-                                      : AppColors.bgCard,
+                                      ? oc.accentBg
+                                      : oc.bgCard,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: _mood == m
                                         ? AppColors.accent
-                                        : AppColors.border,
+                                        : oc.border,
                                   ),
                                 ),
                                 child: Column(
                                   children: [
                                     Text(m.emoji,
-                                        style:
-                                            const TextStyle(fontSize: 20)),
+                                        style: const TextStyle(
+                                            fontSize: 20)),
                                     const SizedBox(height: 2),
                                     Text(
                                       m.label,
-                                      style: AppTextStyles.micro
+                                      style: context.ts.micro
                                           .copyWith(fontSize: 10),
                                       textAlign: TextAlign.center,
                                     ),
@@ -433,13 +431,12 @@ class _AddVisitSheetState extends State<_AddVisitSheet> {
 
                 const SizedBox(height: 16),
 
-                // Note
                 TextField(
                   controller: _noteCtrl,
                   maxLines: 3,
                   decoration: InputDecoration(
                     hintText: 'Заметка к визиту...',
-                    hintStyle: AppTextStyles.quote,
+                    hintStyle: context.ts.quote,
                   ),
                 ),
 

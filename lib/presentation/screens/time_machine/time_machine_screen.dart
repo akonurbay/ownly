@@ -14,37 +14,38 @@ class TimeMachineScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final places = ref.watch(placesProvider);
     final visits = ref.watch(visitsProvider);
+    final oc = context.oc;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final now = DateTime.now();
-
-    final yearAgo = _findVisitsAround(visits, now.subtract(const Duration(days: 365)), 30);
-    final monthAgo = _findVisitsAround(visits, now.subtract(const Duration(days: 30)), 7);
-    final weekAgo = _findVisitsAround(visits, now.subtract(const Duration(days: 7)), 3);
+    final yearAgo  = _findVisitsAround(visits, now.subtract(const Duration(days: 365)), 30);
+    final monthAgo = _findVisitsAround(visits, now.subtract(const Duration(days: 30)),  7);
+    final weekAgo  = _findVisitsAround(visits, now.subtract(const Duration(days: 7)),   3);
 
     final allMemories = [
-      if (yearAgo.isNotEmpty) ('Год назад', yearAgo),
-      if (monthAgo.isNotEmpty) ('Месяц назад', monthAgo),
-      if (weekAgo.isNotEmpty) ('Неделю назад', weekAgo),
+      if (yearAgo.isNotEmpty)  ('Год назад',    yearAgo),
+      if (monthAgo.isNotEmpty) ('Месяц назад',  monthAgo),
+      if (weekAgo.isNotEmpty)  ('Неделю назад', weekAgo),
     ];
 
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: oc.bgPrimary,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Машина времени', style: AppTextStyles.h2),
+              Text('Машина времени', style: context.ts.h2),
               const SizedBox(height: 4),
-              Text('Воспоминания о ваших местах', style: AppTextStyles.caption),
+              Text('Воспоминания о ваших местах', style: context.ts.caption),
               const SizedBox(height: 20),
 
-              // Surprise me card
               GestureDetector(
                 onTap: () {
                   if (places.isNotEmpty) {
-                    final random = places[DateTime.now().millisecond % places.length];
+                    final random =
+                        places[DateTime.now().millisecond % places.length];
                     context.push('/place/${random.id}');
                   }
                 },
@@ -52,15 +53,19 @@ class TimeMachineScreen extends ConsumerWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF2C2416), Color(0xFF4A3728)],
+                    gradient: LinearGradient(
+                      colors: isDark
+                          ? [const Color(0xFF3D3325), const Color(0xFF5C4535)]
+                          : [const Color(0xFF2C2416), const Color(0xFF4A3728)],
                     ),
                     borderRadius: BorderRadius.circular(24),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0x332C2416),
+                        color: isDark
+                            ? Colors.black.withValues(alpha: 0.4)
+                            : const Color(0x332C2416),
                         blurRadius: 24,
-                        offset: Offset(0, 8),
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
@@ -74,7 +79,7 @@ class TimeMachineScreen extends ConsumerWidget {
                           children: [
                             Text(
                               'Удиви меня',
-                              style: AppTextStyles.h3.copyWith(
+                              style: context.ts.h3.copyWith(
                                 color: const Color(0xFFF7F2EA),
                                 fontSize: 17,
                               ),
@@ -82,8 +87,8 @@ class TimeMachineScreen extends ConsumerWidget {
                             const SizedBox(height: 4),
                             Text(
                               'Случайное воспоминание из вашей коллекции',
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.textMuted,
+                              style: context.ts.caption.copyWith(
+                                color: oc.textMuted,
                               ),
                             ),
                           ],
@@ -104,10 +109,7 @@ class TimeMachineScreen extends ConsumerWidget {
               if (allMemories.isEmpty)
                 _EmptyState()
               else
-                _Timeline(
-                  memories: allMemories,
-                  places: places,
-                ),
+                _Timeline(memories: allMemories, places: places),
             ],
           ),
         ),
@@ -134,11 +136,11 @@ class _EmptyState extends StatelessWidget {
           children: [
             const Text('⏳', style: TextStyle(fontSize: 48)),
             const SizedBox(height: 16),
-            Text('Пока нет воспоминаний', style: AppTextStyles.h4),
+            Text('Пока нет воспоминаний', style: context.ts.h4),
             const SizedBox(height: 8),
             Text(
               'Добавляйте места и возвращайтесь сюда через год',
-              style: AppTextStyles.caption,
+              style: context.ts.caption,
               textAlign: TextAlign.center,
             ),
           ],
@@ -156,19 +158,15 @@ class _Timeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Stack(
       children: [
-        // Vertical line
         Positioned(
           left: 20,
           top: 0,
           bottom: 0,
-          child: Container(
-            width: 2,
-            color: AppColors.border,
-          ),
+          child: Container(width: 2, color: oc.border),
         ),
-
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: memories.expand((period) {
@@ -193,7 +191,6 @@ class _Timeline extends StatelessWidget {
 
 class _PeriodHeader extends StatelessWidget {
   final String label;
-
   const _PeriodHeader({required this.label});
 
   @override
@@ -202,9 +199,9 @@ class _PeriodHeader extends StatelessWidget {
       padding: const EdgeInsets.only(left: 52, bottom: 12, top: 4),
       child: Text(
         label.toUpperCase(),
-        style: AppTextStyles.micro.copyWith(
+        style: context.ts.micro.copyWith(
           color: AppColors.accent,
-          letterSpacing: 0.05 * 11,
+          letterSpacing: 0.55,
         ),
       ),
     );
@@ -220,13 +217,13 @@ class _TimelineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cat = place.category;
+    final oc = context.oc;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Timeline dot
           Container(
             width: 42,
             height: 42,
@@ -235,7 +232,7 @@ class _TimelineCard extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accentBg,
+                  color: oc.accentBg,
                   blurRadius: 8,
                   spreadRadius: 2,
                 ),
@@ -247,53 +244,48 @@ class _TimelineCard extends StatelessWidget {
 
           const SizedBox(width: 10),
 
-          // Card
           Expanded(
             child: GestureDetector(
               onTap: () => context.push('/place/${place.id}'),
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppColors.bgCard,
+                  color: oc.bgCard,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: oc.border),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Mini hero
                     Container(
                       height: 60,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [cat.bgColor, AppColors.bgDeep],
+                          colors: [cat.bgColor, oc.bgDeep],
                         ),
                       ),
                       alignment: Alignment.center,
-                      child: Text(
-                        cat.emoji,
-                        style: const TextStyle(fontSize: 28),
-                      ),
+                      child: Text(cat.emoji,
+                          style: const TextStyle(fontSize: 28)),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(place.name, style: AppTextStyles.cardTitleSm),
+                          Text(place.name, style: context.ts.cardTitleSm),
                           const SizedBox(height: 4),
                           if (visit.note != null && visit.note!.isNotEmpty)
                             Text(
                               visit.note!,
-                              style: AppTextStyles.quote
-                                  .copyWith(fontSize: 12),
+                              style: context.ts.quote.copyWith(fontSize: 12),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           const SizedBox(height: 4),
                           Text(
                             _formatDate(visit.visitedAt),
-                            style: AppTextStyles.micro,
+                            style: context.ts.micro,
                           ),
                         ],
                       ),

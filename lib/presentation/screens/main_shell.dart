@@ -30,10 +30,11 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final oc = context.oc;
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.bgCard,
-        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+      decoration: BoxDecoration(
+        color: oc.bgCard,
+        border: Border(top: BorderSide(color: oc.border, width: 1)),
       ),
       child: SafeArea(
         top: false,
@@ -94,7 +95,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppColors.accent : AppColors.textMuted;
+    final color = active ? AppColors.accent : context.oc.textMuted;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -108,8 +109,7 @@ class _NavItem extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 11,
-                fontWeight:
-                    active ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                 color: color,
               ),
             ),
