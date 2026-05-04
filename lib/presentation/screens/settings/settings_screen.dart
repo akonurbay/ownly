@@ -1,9 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../data/local/local_storage.dart';
 import '../../providers/settings_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -64,7 +69,7 @@ class SettingsScreen extends ConsumerWidget {
                 _Divider(),
                 _ArrowRow(
                   label: 'Экспорт данных',
-                  onTap: () {},
+                  onTap: () => _exportData(context),
                 ),
                 _Divider(),
                 _ArrowRow(
@@ -107,6 +112,41 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _exportData(BuildContext context) async {
+    try {
+      final data = LocalStorage.exportAll();
+      final json = const JsonEncoder.withIndent('  ').convert(data);
+
+      final dir = await getTemporaryDirectory();
+      final timestamp = DateTime.now()
+          .toIso8601String()
+          .replaceAll(':', '-')
+          .split('.')
+          .first;
+      final file = File('${dir.path}/ownly_export_$timestamp.json');
+      await file.writeAsString(json);
+
+      if (!context.mounted) return;
+      final box = context.findRenderObject() as RenderBox?;
+      await Share.shareXFiles(
+        [XFile(file.path, mimeType: 'application/json')],
+        subject: 'Ownly — экспорт данных',
+        sharePositionOrigin: box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : null,
+      );
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Не удалось экспортировать данные'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _logout(BuildContext context) async {

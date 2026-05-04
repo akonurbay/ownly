@@ -61,6 +61,19 @@ class LocalStorage {
     await _visits.deleteAll(ids);
   }
 
+  static Map<String, dynamic> exportAll() {
+    return {
+      'exported_at': DateTime.now().toIso8601String(),
+      'version': '1.0',
+      'places': _places.values
+          .map((v) => jsonDecode(v as String))
+          .toList(),
+      'visits': _visits.values
+          .map((v) => jsonDecode(v as String))
+          .toList(),
+    };
+  }
+
   // Settings
   static bool getBool(String key, {bool defaultValue = false}) =>
       _settings.get(key, defaultValue: defaultValue) as bool;
