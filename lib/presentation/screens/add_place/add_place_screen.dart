@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -9,6 +11,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/enums.dart';
 import '../../../domain/entities/place.dart';
 import '../../providers/places_provider.dart';
+import '../../providers/settings_provider.dart';
 
 class AddPlaceScreen extends ConsumerStatefulWidget {
   const AddPlaceScreen({super.key});
@@ -20,6 +23,7 @@ class AddPlaceScreen extends ConsumerStatefulWidget {
 class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
   int _step = 0;
   bool _saving = false;
+  bool _locating = false;
 
   final _nameCtrl      = TextEditingController();
   final _cityCtrl      = TextEditingController();
@@ -111,6 +115,74 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _getLocation() async {
+    final gpsEnabled = ref.read(settingsProvider).gpsEnabled;
+    if (!gpsEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Включите GPS в Настройках'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _locating = true);
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Нет разрешения на геолокацию'),
+              behavior: SnackBarBehavior.floating,
+              action: permission == LocationPermission.deniedForever
+                  ? SnackBarAction(
+                      label: 'Настройки',
+                      onPressed: Geolocator.openAppSettings,
+                    )
+                  : null,
+            ),
+          );
+        }
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings:
+            const LocationSettings(accuracy: LocationAccuracy.low),
+      );
+
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+        final city = p.locality?.isNotEmpty == true
+            ? p.locality!
+            : p.administrativeArea ?? '';
+        if (city.isNotEmpty) _cityCtrl.text = city;
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Не удалось определить местоположение'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
   }
 
   void _goToStep2() {
@@ -228,7 +300,9 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
                         noteCtrl: _noteCtrl,
                         category: _category,
                         photoPath: _photoPath,
+                        isLocating: _locating,
                         onPhotoTap: _showPhotoOptions,
+                        onGetLocation: _getLocation,
                         onCategoryChanged: (c) =>
                             setState(() => _category = c),
                         onNext: _goToStep2,
@@ -264,7 +338,9 @@ class _Step1 extends StatelessWidget {
   final TextEditingController noteCtrl;
   final PlaceCategory category;
   final String? photoPath;
+  final bool isLocating;
   final VoidCallback onPhotoTap;
+  final VoidCallback onGetLocation;
   final ValueChanged<PlaceCategory> onCategoryChanged;
   final VoidCallback onNext;
 
@@ -275,7 +351,9 @@ class _Step1 extends StatelessWidget {
     required this.noteCtrl,
     required this.category,
     required this.photoPath,
+    required this.isLocating,
     required this.onPhotoTap,
+    required this.onGetLocation,
     required this.onCategoryChanged,
     required this.onNext,
   });
@@ -375,7 +453,26 @@ class _Step1 extends StatelessWidget {
           TextField(
             controller: cityCtrl,
             textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(hintText: 'Москва'),
+            decoration: InputDecoration(
+              hintText: 'Москва',
+              suffixIcon: GestureDetector(
+                onTap: isLocating ? null : onGetLocation,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: isLocating
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accent,
+                          ),
+                        )
+                      : const Icon(Icons.my_location,
+                          size: 20, color: AppColors.accent),
+                ),
+              ),
+            ),
           ),
 
           const SizedBox(height: 16),

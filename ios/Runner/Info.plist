@@ -45,6 +45,8 @@
 	<string>Ownly использует галерею для добавления фото к местам</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Ownly использует камеру для съёмки фото места</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ownly использует геолокацию для автоматического определения города</string>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
