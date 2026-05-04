@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/app_colors.dart';
@@ -52,7 +53,33 @@ class _AddPlaceScreenState extends ConsumerState<AddPlaceScreen> {
       imageQuality: 80,
       maxWidth: 1200,
     );
-    if (image != null) setState(() => _photoPath = image.path);
+    if (image == null) return;
+
+    final cropped = await ImageCropper().cropImage(
+      sourcePath: image.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Обрезать фото',
+          toolbarColor: AppColors.accent,
+          toolbarWidgetColor: Colors.white,
+          initAspectRatio: CropAspectRatioPreset.ratio3x2,
+          lockAspectRatio: false,
+          aspectRatioPresets: [
+            CropAspectRatioPreset.original,
+            CropAspectRatioPreset.square,
+            CropAspectRatioPreset.ratio3x2,
+            CropAspectRatioPreset.ratio16x9,
+          ],
+        ),
+        IOSUiSettings(
+          title: 'Обрезать фото',
+          cancelButtonTitle: 'Отмена',
+          doneButtonTitle: 'Готово',
+        ),
+      ],
+    );
+
+    if (cropped != null) setState(() => _photoPath = cropped.path);
   }
 
   void _showPhotoOptions() {

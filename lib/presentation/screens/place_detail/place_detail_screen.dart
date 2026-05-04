@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -56,15 +57,30 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
                       colors: [cat.bgColor, oc.bgDeep],
                     ),
                   ),
-                  child: Center(
-                    child: Text(
-                      cat.emoji,
-                      style: TextStyle(
-                        fontSize: 64,
-                        color: Colors.black.withValues(alpha: 0.4),
-                      ),
-                    ),
-                  ),
+                  child: place.photoPath != null
+                      ? Image.file(
+                          File(place.photoPath!),
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          errorBuilder: (_, __, ___) => Center(
+                            child: Text(
+                              cat.emoji,
+                              style: TextStyle(
+                                fontSize: 64,
+                                color: Colors.black.withValues(alpha: 0.4),
+                              ),
+                            ),
+                          ),
+                        )
+                      : Center(
+                          child: Text(
+                            cat.emoji,
+                            style: TextStyle(
+                              fontSize: 64,
+                              color: Colors.black.withValues(alpha: 0.4),
+                            ),
+                          ),
+                        ),
                 ),
                 SafeArea(
                   child: Padding(

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -53,10 +54,19 @@ class PlaceCard extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  Center(
-                    child: Text(cat.emoji,
-                        style: const TextStyle(fontSize: 40)),
-                  ),
+                  if (place.photoPath != null)
+                    Positioned.fill(
+                      child: Image.file(
+                        File(place.photoPath!),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox(),
+                      ),
+                    )
+                  else
+                    Center(
+                      child: Text(cat.emoji,
+                          style: const TextStyle(fontSize: 40)),
+                    ),
                   Positioned(
                     left: 10,
                     bottom: 10,
