@@ -291,15 +291,13 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
           TextButton(
             style:
                 TextButton.styleFrom(foregroundColor: AppColors.dangerRed),
-            onPressed: () async {
-              Navigator.pop(context);
-              await ref
-                  .read(placesProvider.notifier)
-                  .deletePlaceWithVisits(
-                    placeId,
-                    ref.read(visitsProvider.notifier),
-                  );
-              if (context.mounted) context.go('/');
+            onPressed: () {
+              Navigator.pop(context); // close dialog
+              context.pop();          // back to home screen
+              ref.read(placesProvider.notifier).deletePlaceWithVisits(
+                placeId,
+                ref.read(visitsProvider.notifier),
+              );
             },
             child: const Text('Удалить'),
           ),
