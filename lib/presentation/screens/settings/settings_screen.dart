@@ -160,10 +160,30 @@ class _ProfileCardState extends State<_ProfileCard> {
     });
   }
 
+  void _openEdit() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _EditProfileSheet(
+        initialName: _name,
+        initialEmail: _email,
+        onSaved: (name, email) {
+          setState(() {
+            _name = name;
+            _email = email;
+          });
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final oc = context.oc;
-    return Container(
+    return GestureDetector(
+      onTap: _openEdit,
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: oc.bgCard,
@@ -196,8 +216,192 @@ class _ProfileCardState extends State<_ProfileCard> {
               ],
             ),
           ),
-          Icon(Icons.edit_outlined, size: 18, color: oc.textMuted),
+          Icon(Icons.edit_outlined, size: 18, color: AppColors.accent),
         ],
+      ),
+      ),
+    );
+  }
+}
+
+class _EditProfileSheet extends StatefulWidget {
+  final String initialName;
+  final String initialEmail;
+  final void Function(String name, String email) onSaved;
+
+  const _EditProfileSheet({
+    required this.initialName,
+    required this.initialEmail,
+    required this.onSaved,
+  });
+
+  @override
+  State<_EditProfileSheet> createState() => _EditProfileSheetState();
+}
+
+class _EditProfileSheetState extends State<_EditProfileSheet> {
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _emailCtrl;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl  = TextEditingController(text: widget.initialName);
+    _emailCtrl = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _emailCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final name  = _nameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+
+    if (name.isEmpty) {
+      setState(() => _error = 'Введите имя');
+      return;
+    }
+    if (email.isEmpty || !email.contains('@')) {
+      setState(() => _error = 'Введите корректный email');
+      return;
+    }
+
+    setState(() { _loading = true; _error = null; });
+
+    try {
+      final user = FirebaseAuth.instance.currentUser!;
+      if (name != widget.initialName) {
+        await user.updateDisplayName(name);
+      }
+      if (email != widget.initialEmail) {
+        await user.verifyBeforeUpdateEmail(email);
+      }
+
+      widget.onSaved(name, email != widget.initialEmail ? widget.initialEmail : email);
+
+      if (mounted) {
+        if (email != widget.initialEmail) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Имя сохранено. На новый email отправлено письмо для подтверждения.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else {
+          Navigator.pop(context);
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _loading = false;
+        _error = switch (e.code) {
+          'requires-recent-login' => 'Войдите снова, чтобы изменить email',
+          'email-already-in-use'  => 'Этот email уже используется',
+          'invalid-email'         => 'Некорректный email',
+          _                       => 'Ошибка сохранения. Попробуйте снова',
+        };
+      });
+    } catch (_) {
+      setState(() { _loading = false; _error = 'Ошибка сохранения'; });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final oc = context.oc;
+    return Container(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      decoration: BoxDecoration(
+        color: oc.bgPrimary,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: oc.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Редактировать профиль', style: context.ts.h3),
+              const SizedBox(height: 20),
+
+              Text('Имя',
+                  style: context.ts.micro.copyWith(color: oc.textSub)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _nameCtrl,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(hintText: 'Ваше имя'),
+              ),
+              const SizedBox(height: 16),
+
+              Text('Email',
+                  style: context.ts.micro.copyWith(color: oc.textSub)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+                decoration:
+                    const InputDecoration(hintText: 'email@example.com'),
+              ),
+
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.dangerRed.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: AppColors.dangerRed.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    _error!,
+                    style: context.ts.caption
+                        .copyWith(color: AppColors.dangerRed),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 24),
+
+              ElevatedButton(
+                onPressed: _loading ? null : _save,
+                child: _loading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white),
+                      )
+                    : Text('Сохранить', style: AppTextStyles.button),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
