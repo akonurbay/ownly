@@ -49,6 +49,12 @@ class PlacesNotifier extends StateNotifier<List<Place>> {
     state = LocalStorage.getPlaces();
   }
 
+  Future<void> deletePlaceWithVisits(String id, VisitsNotifier visitsNotifier) async {
+    await visitsNotifier.deleteVisitsForPlace(id);
+    await LocalStorage.deletePlace(id);
+    state = LocalStorage.getPlaces();
+  }
+
   Place? getById(String id) {
     try {
       return state.firstWhere((p) => p.id == id);
@@ -91,6 +97,11 @@ class VisitsNotifier extends StateNotifier<List<Visit>> {
       visitedAt: visitedAt ?? DateTime.now(),
     );
     await LocalStorage.saveVisit(visit);
+    state = LocalStorage.getVisits();
+  }
+
+  Future<void> deleteVisitsForPlace(String placeId) async {
+    await LocalStorage.deleteVisitsForPlace(placeId);
     state = LocalStorage.getVisits();
   }
 

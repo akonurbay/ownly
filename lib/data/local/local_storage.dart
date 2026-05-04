@@ -51,6 +51,16 @@ class LocalStorage {
     await _visits.delete(id);
   }
 
+  static Future<void> deleteVisitsForPlace(String placeId) async {
+    final ids = _visits.keys.where((key) {
+      final raw = _visits.get(key);
+      if (raw == null) return false;
+      final map = jsonDecode(raw as String) as Map<String, dynamic>;
+      return map['placeId'] == placeId;
+    }).toList();
+    await _visits.deleteAll(ids);
+  }
+
   // Settings
   static bool getBool(String key, {bool defaultValue = false}) =>
       _settings.get(key, defaultValue: defaultValue) as bool;

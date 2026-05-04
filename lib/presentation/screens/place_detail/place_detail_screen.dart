@@ -110,6 +110,11 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
                               icon: Icons.share_outlined,
                               onTap: () => _share(context),
                             ),
+                            const SizedBox(width: 8),
+                            _CircleButton(
+                              icon: Icons.more_vert,
+                              onTap: () => _showMenu(context, place.id),
+                            ),
                           ],
                         ),
                       ],
@@ -223,6 +228,80 @@ class _PlaceDetailScreenState extends ConsumerState<PlaceDetailScreen> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMenu(BuildContext context, String placeId) {
+    final oc = context.oc;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+        decoration: BoxDecoration(
+          color: oc.bgCard,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: oc.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.delete_outline,
+                    color: AppColors.dangerRed),
+                title: const Text('Удалить место',
+                    style: TextStyle(color: AppColors.dangerRed)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _confirmDelete(context, placeId);
+                },
+              ),
+              const SizedBox(height: 4),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, String placeId) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Удалить место?'),
+        content: const Text(
+            'Место и все визиты к нему будут удалены без возможности восстановления.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            style:
+                TextButton.styleFrom(foregroundColor: AppColors.dangerRed),
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref
+                  .read(placesProvider.notifier)
+                  .deletePlaceWithVisits(
+                    placeId,
+                    ref.read(visitsProvider.notifier),
+                  );
+              if (context.mounted) context.go('/');
+            },
+            child: const Text('Удалить'),
           ),
         ],
       ),
