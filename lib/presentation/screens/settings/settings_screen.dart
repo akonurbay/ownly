@@ -6,9 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../core/constants/route_paths.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../data/local/local_storage.dart';
+import '../../providers/repository_providers.dart';
 import '../../providers/settings_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -69,7 +70,7 @@ class SettingsScreen extends ConsumerWidget {
                 _Divider(),
                 _ArrowRow(
                   label: 'Экспорт данных',
-                  onTap: () => _exportData(context),
+                  onTap: () => _exportData(context, ref),
                 ),
                 _Divider(),
                 _ArrowRow(
@@ -114,9 +115,9 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _exportData(BuildContext context) async {
+  Future<void> _exportData(BuildContext context, WidgetRef ref) async {
     try {
-      final data = LocalStorage.exportAll();
+      final data = ref.read(exportAllDataUseCaseProvider).call();
       final json = const JsonEncoder.withIndent('  ').convert(data);
 
       final dir = await getTemporaryDirectory();
@@ -151,7 +152,7 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    if (context.mounted) context.go('/auth');
+    if (context.mounted) context.go(RoutePaths.auth);
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref) {

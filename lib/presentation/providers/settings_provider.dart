@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/local/local_storage.dart';
+import '../../core/constants/storage_keys.dart';
+import '../../domain/usecases/settings/get_setting.dart';
+import '../../domain/usecases/settings/set_setting.dart';
+import 'repository_providers.dart';
 
 class SettingsState {
   final bool darkTheme;
@@ -27,34 +30,42 @@ class SettingsState {
 }
 
 class SettingsNotifier extends StateNotifier<SettingsState> {
-  SettingsNotifier()
-      : super(SettingsState(
-          darkTheme: LocalStorage.getBool('darkTheme'),
+  final SetBoolSetting _setBool;
+
+  SettingsNotifier({
+    required GetBoolSetting getBool,
+    required SetBoolSetting setBool,
+  })  : _setBool = setBool,
+        super(SettingsState(
+          darkTheme: getBool(StorageKeys.darkTheme),
           timeMachineNotifications:
-              LocalStorage.getBool('timeMachineNotifs', defaultValue: true),
-          gpsEnabled: LocalStorage.getBool('gpsEnabled', defaultValue: true),
+              getBool(StorageKeys.timeMachineNotifs, defaultValue: true),
+          gpsEnabled: getBool(StorageKeys.gpsEnabled, defaultValue: true),
         ));
 
   Future<void> toggleDarkTheme() async {
     final next = !state.darkTheme;
-    await LocalStorage.setBool('darkTheme', next);
+    await _setBool(StorageKeys.darkTheme, next);
     state = state.copyWith(darkTheme: next);
   }
 
   Future<void> toggleTimeMachineNotifs() async {
     final next = !state.timeMachineNotifications;
-    await LocalStorage.setBool('timeMachineNotifs', next);
+    await _setBool(StorageKeys.timeMachineNotifs, next);
     state = state.copyWith(timeMachineNotifications: next);
   }
 
   Future<void> toggleGps() async {
     final next = !state.gpsEnabled;
-    await LocalStorage.setBool('gpsEnabled', next);
+    await _setBool(StorageKeys.gpsEnabled, next);
     state = state.copyWith(gpsEnabled: next);
   }
 }
 
 final settingsProvider =
     StateNotifierProvider<SettingsNotifier, SettingsState>(
-  (ref) => SettingsNotifier(),
+  (ref) => SettingsNotifier(
+    getBool: ref.watch(getBoolSettingUseCaseProvider),
+    setBool: ref.watch(setBoolSettingUseCaseProvider),
+  ),
 );

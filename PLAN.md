@@ -16,33 +16,57 @@ After a year the app reminds them: "A year ago you were here."
 lib/
 ├── main.dart                          # App entry — init Hive, SharedPrefs, determine initial route
 ├── app.dart                           # MaterialApp.router
+├── firebase_options.dart              # Firebase config (FlutterFire CLI)
 │
 ├── core/
+│   ├── constants/
+│   │   ├── route_paths.dart           # All go_router paths
+│   │   └── storage_keys.dart          # Hive box names + settings keys
+│   ├── router/
+│   │   └── app_router.dart            # go_router — routes + transitions
 │   ├── theme/
 │   │   ├── app_colors.dart            # All design tokens (colors)
 │   │   ├── app_text_styles.dart       # Typography scale (Lora + Inter)
 │   │   └── app_theme.dart             # ThemeData (Material 3)
-│   └── router/
-│       └── app_router.dart            # go_router — routes + transitions
+│   ├── utils/
+│   │   └── plural.dart                # Russian pluralization helpers
+│   └── widgets/
+│       └── ownly_logo.dart            # Branded "O" square logo (shared)
 │
-├── domain/
-│   └── entities/
-│       ├── enums.dart                 # PlaceCategory, MoodType, WeatherType, CompanionType
-│       ├── place.dart                 # Place entity + toJson/fromJson
-│       └── visit.dart                 # Visit entity + toJson/fromJson
+├── domain/                            # Pure Dart, no Flutter dependencies
+│   ├── entities/
+│   │   ├── enums.dart                 # PlaceCategory, MoodType, WeatherType, CompanionType
+│   │   ├── place.dart                 # Place entity (no JSON)
+│   │   └── visit.dart                 # Visit entity (no JSON)
+│   ├── repositories/
+│   │   ├── place_repository.dart      # abstract PlaceRepository
+│   │   ├── visit_repository.dart      # abstract VisitRepository
+│   │   └── settings_repository.dart   # abstract SettingsRepository
+│   └── usecases/
+│       ├── places/                    # GetPlaces, GetPlaceById, AddPlace, ToggleFavorite, DeletePlaceWithVisits
+│       ├── visits/                    # GetVisits, AddVisit, DeleteVisitsForPlace
+│       ├── settings/                  # GetBoolSetting, SetBoolSetting
+│       └── export/                    # ExportAllData
 │
 ├── data/
-│   ├── local/
-│   │   └── local_storage.dart         # Hive boxes — JSON-in-Hive (no codegen)
+│   ├── datasources/
+│   │   └── local_storage.dart         # Hive boxes — uses StorageKeys + (de)serializes via models
+│   ├── models/
+│   │   ├── place_model.dart           # PlaceModel extends Place + toJson/fromJson/fromEntity
+│   │   └── visit_model.dart           # VisitModel extends Visit + toJson/fromJson/fromEntity
+│   ├── repositories/
+│   │   ├── place_repository_impl.dart
+│   │   ├── visit_repository_impl.dart
+│   │   └── settings_repository_impl.dart
 │   └── seed_data.dart                 # 5 places + 9 visits for first launch
 │
 └── presentation/
     ├── providers/
-    │   ├── places_provider.dart        # PlacesNotifier + VisitsNotifier (StateNotifier)
-    │   └── settings_provider.dart      # SettingsNotifier (dark theme, notifications, GPS)
+    │   ├── repository_providers.dart   # DI: repositories + use cases
+    │   ├── places_provider.dart        # PlacesNotifier + VisitsNotifier (use cases injected)
+    │   └── settings_provider.dart      # SettingsNotifier (use cases injected)
     │
     ├── widgets/
-    │   ├── ownly_logo.dart             # Branded "O" square logo
     │   ├── place_card.dart             # Grid card with category gradient + badge
     │   └── visit_card.dart             # Visit history row card
     │

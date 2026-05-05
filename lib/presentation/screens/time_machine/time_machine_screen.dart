@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/route_paths.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../domain/entities/place.dart';
@@ -46,7 +47,7 @@ class TimeMachineScreen extends ConsumerWidget {
                   if (places.isNotEmpty) {
                     final random =
                         places[DateTime.now().millisecond % places.length];
-                    context.push('/place/${random.id}');
+                    context.push(RoutePaths.placeDetailFor(random.id));
                   }
                 },
                 child: Container(
@@ -246,7 +247,7 @@ class _TimelineCard extends StatelessWidget {
 
           Expanded(
             child: GestureDetector(
-              onTap: () => context.push('/place/${place.id}'),
+              onTap: () => context.push(RoutePaths.placeDetailFor(place.id)),
               child: Container(
                 decoration: BoxDecoration(
                   color: oc.bgCard,

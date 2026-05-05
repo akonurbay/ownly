@@ -50,30 +50,4 @@ class Place {
       isFavorite: isFavorite ?? this.isFavorite,
     );
   }
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'description': description,
-        'category': category.name,
-        'city': city,
-        'latitude': latitude,
-        'longitude': longitude,
-        'photoPath': photoPath,
-        'createdAt': createdAt.toIso8601String(),
-        'isFavorite': isFavorite,
-      };
-
-  factory Place.fromJson(Map<String, dynamic> json) => Place(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        description: json['description'] as String,
-        category: PlaceCategory.fromString(json['category'] as String),
-        city: json['city'] as String,
-        latitude: json['latitude'] as double?,
-        longitude: json['longitude'] as double?,
-        photoPath: json['photoPath'] as String?,
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        isFavorite: json['isFavorite'] as bool,
-      );
 }

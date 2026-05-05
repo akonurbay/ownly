@@ -2,9 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/constants/route_paths.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../widgets/ownly_logo.dart';
+import '../../../core/widgets/ownly_logo.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -66,7 +67,7 @@ class _AuthScreenState extends State<AuthScreen> {
         await prefs.setString('userName', _nameCtrl.text.trim());
       }
 
-      if (mounted) context.go('/');
+      if (mounted) context.go(RoutePaths.home);
     } on FirebaseAuthException catch (e) {
       setState(() { _loading = false; _error = _firebaseError(e.code); });
     } catch (_) {

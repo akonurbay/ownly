@@ -2,8 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/constants/route_paths.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../core/utils/plural.dart';
 import '../../domain/entities/place.dart';
 import '../providers/places_provider.dart';
 
@@ -20,7 +22,7 @@ class PlaceCard extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
-      onTap: () => context.push('/place/${place.id}'),
+      onTap: () => context.push(RoutePaths.placeDetailFor(place.id)),
       child: Container(
         decoration: BoxDecoration(
           color: oc.bgCard,
@@ -129,7 +131,7 @@ class PlaceCard extends ConsumerWidget {
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(
-                          '${place.city} · $visitCount ${_visitWord(visitCount)}',
+                          '${place.city} · $visitCount ${visitWord(visitCount)}',
                           style: context.ts.caption,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -146,11 +148,4 @@ class PlaceCard extends ConsumerWidget {
     );
   }
 
-  String _visitWord(int n) {
-    if (n % 10 == 1 && n % 100 != 11) return 'визит';
-    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) {
-      return 'визита';
-    }
-    return 'визитов';
-  }
 }

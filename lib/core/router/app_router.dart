@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../constants/route_paths.dart';
 import '../../presentation/screens/onboarding/onboarding_screen.dart';
 import '../../presentation/screens/auth/auth_screen.dart';
 import '../../presentation/screens/home/home_screen.dart';
@@ -15,11 +16,11 @@ GoRouter createRouter(String initialLocation) {
     initialLocation: initialLocation,
     routes: [
       GoRoute(
-        path: '/onboarding',
+        path: RoutePaths.onboarding,
         pageBuilder: (context, state) => _fade(state, const OnboardingScreen()),
       ),
       GoRoute(
-        path: '/auth',
+        path: RoutePaths.auth,
         pageBuilder: (context, state) => _fade(state, const AuthScreen()),
       ),
       StatefulShellRoute.indexedStack(
@@ -28,28 +29,28 @@ GoRouter createRouter(String initialLocation) {
         branches: [
           StatefulShellBranch(routes: [
             GoRoute(
-              path: '/',
+              path: RoutePaths.home,
               pageBuilder: (context, state) =>
                   _fade(state, const HomeScreen()),
             ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-              path: '/time-machine',
+              path: RoutePaths.timeMachine,
               pageBuilder: (context, state) =>
                   _fade(state, const TimeMachineScreen()),
             ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-              path: '/analytics',
+              path: RoutePaths.analytics,
               pageBuilder: (context, state) =>
                   _fade(state, const AnalyticsScreen()),
             ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-              path: '/settings',
+              path: RoutePaths.settings,
               pageBuilder: (context, state) =>
                   _fade(state, const SettingsScreen()),
             ),
@@ -57,14 +58,14 @@ GoRouter createRouter(String initialLocation) {
         ],
       ),
       GoRoute(
-        path: '/place/:id',
+        path: RoutePaths.placeDetail,
         pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
           return _slideRight(state, PlaceDetailScreen(placeId: id));
         },
       ),
       GoRoute(
-        path: '/add-place',
+        path: RoutePaths.addPlace,
         pageBuilder: (context, state) =>
             _slideUp(state, const AddPlaceScreen()),
       ),

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/route_paths.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/utils/plural.dart';
 import '../../../domain/entities/enums.dart';
 import '../../providers/places_provider.dart';
 import '../../widgets/place_card.dart';
@@ -54,14 +56,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Text('Мои места', style: context.ts.h2),
                           const SizedBox(height: 2),
                           Text(
-                            '${places.length} ${_placeWord(places.length)} · $totalVisits ${_visitWord(totalVisits)}',
+                            '${places.length} ${placeWord(places.length)} · $totalVisits ${visitWord(totalVisits)}',
                             style: context.ts.caption,
                           ),
                         ],
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => context.push('/add-place'),
+                      onTap: () => context.push(RoutePaths.addPlace),
                       child: Container(
                         width: 40,
                         height: 40,
@@ -196,21 +198,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  String _placeWord(int n) {
-    if (n % 10 == 1 && n % 100 != 11) return 'место';
-    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) {
-      return 'места';
-    }
-    return 'мест';
-  }
-
-  String _visitWord(int n) {
-    if (n % 10 == 1 && n % 100 != 11) return 'визит';
-    if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) {
-      return 'визита';
-    }
-    return 'визитов';
-  }
 }
 
 class _FilterChip extends StatelessWidget {

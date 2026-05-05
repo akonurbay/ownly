@@ -38,24 +38,4 @@ class Visit {
       visitedAt: visitedAt ?? this.visitedAt,
     );
   }
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'placeId': placeId,
-        'mood': mood.name,
-        'weather': weather.name,
-        'companion': companion.name,
-        'note': note,
-        'visitedAt': visitedAt.toIso8601String(),
-      };
-
-  factory Visit.fromJson(Map<String, dynamic> json) => Visit(
-        id: json['id'] as String,
-        placeId: json['placeId'] as String,
-        mood: MoodType.fromString(json['mood'] as String),
-        weather: WeatherType.fromString(json['weather'] as String),
-        companion: CompanionType.fromString(json['companion'] as String),
-        note: json['note'] as String?,
-        visitedAt: DateTime.parse(json['visitedAt'] as String),
-      );
 }
