@@ -11,32 +11,30 @@
 
 <table>
   <tr>
-    <td align="center"><b>Onboarding</b></td>
-    <td align="center"><b>Auth</b></td>
-    <td align="center"><b>Home</b></td>
-    <td align="center"><b>Place Detail</b></td>
+    <td align="center"><b>Онбординг</b></td>
+    <td align="center"><b>Вход</b></td>
+    <td align="center"><b>Регистрация</b></td>
+    <td align="center"><b>Главная</b></td>
   </tr>
   <tr>
-    <td><img src="screenshots/onboarding.png" width="200" alt="Onboarding"/></td>
-    <td><img src="screenshots/auth.png" width="200" alt="Auth"/></td>
-    <td><img src="screenshots/home.png" width="200" alt="Home"/></td>
-    <td><img src="screenshots/place_detail.png" width="200" alt="Place Detail"/></td>
+    <td><img src="screenshots/onboarding.png" width="200" alt="Онбординг"/></td>
+    <td><img src="screenshots/auth_login.png" width="200" alt="Вход"/></td>
+    <td><img src="screenshots/auth_register.png" width="200" alt="Регистрация"/></td>
+    <td><img src="screenshots/home.png" width="200" alt="Главная"/></td>
   </tr>
   <tr>
-    <td align="center"><b>Add Place</b></td>
-    <td align="center"><b>Analytics</b></td>
-    <td align="center"><b>Time Machine</b></td>
-    <td align="center"><b>Settings</b></td>
+    <td align="center"><b>Добавить место</b></td>
+    <td align="center"><b>Аналитика</b></td>
+    <td align="center"><b>Настройки</b></td>
+    <td></td>
   </tr>
   <tr>
-    <td><img src="screenshots/add_place.png" width="200" alt="Add Place"/></td>
-    <td><img src="screenshots/analytics.png" width="200" alt="Analytics"/></td>
-    <td><img src="screenshots/time_machine.png" width="200" alt="Time Machine"/></td>
-    <td><img src="screenshots/settings.png" width="200" alt="Settings"/></td>
+    <td><img src="screenshots/add_place.png" width="200" alt="Добавить место"/></td>
+    <td><img src="screenshots/analytics.png" width="200" alt="Аналитика"/></td>
+    <td><img src="screenshots/settings.png" width="200" alt="Настройки"/></td>
+    <td></td>
   </tr>
 </table>
-
-> Положите PNG-файлы в `screenshots/` с именами выше — таблица заполнится автоматически.
 
 ---
 
